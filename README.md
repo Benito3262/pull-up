@@ -4,6 +4,12 @@ Guests put a NEAR deposit on an event. The ones who show up get their deposit ba
 
 Built at **NEAR HACKATHON**. Tracks: `realworld` (Real-World Money), `social` (Social Money).
 
+## Live demo
+
+https://pull-up-swart.vercel.app
+
+Public repo: https://github.com/Benito3262/pull-up
+
 Illia named this mechanic ("kickback deposits for events"). Nobody had shipped it in the demo posts we checked, so we did.
 
 ## Problem
