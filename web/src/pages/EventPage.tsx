@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { callMethod, txUrl, viewMethod } from '../lib/near'
+import { callMethod, txUrl, viewMethod, friendlyError } from '../lib/near'
 import type { EventView, GuestStatus } from '../lib/near'
 import { ACCOUNT_EXPLORER, shortAccount } from '../lib/config'
 import { useAccount, connect } from '../components/WalletButton'
@@ -74,7 +74,7 @@ export function EventPage() {
       toast(`${label} confirmed on NEAR`, 'ok')
       await load()
     } catch (err) {
-      const m = err instanceof Error ? err.message : String(err)
+      const m = friendlyError(err)
       setError(m)
       toast(m, 'err')
     } finally {
@@ -156,13 +156,15 @@ export function EventPage() {
             {!mine && !isHost && !ev.closed && phase !== 'settling' && (
               <button className="btn btn-lg w100" disabled={busy} onClick={onDeposit}>{busy ? 'Confirm in wallet…' : account ? `Stake ${fmtNear(ev.deposit, 4)} & RSVP` : 'Connect wallet to RSVP'}</button>
             )}
-            {mine && qr && mine === 'Deposited' && (
+            {mine && qr && mine === 'Deposited' && !ev.closed && (
               <div className="qr-ticket">
                 <div className="qr-wrap"><QRCodeSVG value={qr} size={188} bgColor="#ffffff" fgColor="#14132A" level="M" /></div>
                 <div className="mono small">YOUR TICKET · show at the door</div>
+                <button type="button" className="btn btn-ghost btn-sm" data-testid="copy-ticket" data-code={qr} onClick={() => { navigator.clipboard?.writeText(qr).catch(() => {}); toast('Ticket code copied', 'ok') }}>Copy code (no-camera backup)</button>
               </div>
             )}
-            {mine === 'Deposited' && !qr && <p className="muted small">You’re in. Your QR lives on the device you RSVP’d from.</p>}
+            {ev.closed && mine === 'Deposited' && !ev.refund_mode && <div className="error" data-testid="noshow">You didn’t check in, so your stake went to the guests who pulled up. Nothing to claim.</div>}
+            {mine === 'Deposited' && !qr && !ev.closed && <p className="muted small">You’re in. Your QR lives on the device you RSVP’d from.</p>}
             {mine === 'CheckedIn' && !ev.closed && <div className="okbox"><Mascot size={54} mood="cheer" /> You pulled up! Claim opens when the host closes.</div>}
             {ev.closed && mine && mine !== 'Claimed' && (mine === 'CheckedIn' || ev.refund_mode) && (
               <button className="btn btn-lg w100" disabled={busy} onClick={() => run('Claim', () => callMethod('claim', { event_id: eventId }))}>Claim {fmtNear(ev.payout_per_attendee, 4)}</button>

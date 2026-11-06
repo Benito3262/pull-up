@@ -280,3 +280,6 @@ details p { color: var(--muted); margin-top: 10px }
   .toasts { left: 14px; right: 14px; bottom: 14px }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } .reveal { opacity: 1; transform: none } }
+.manual-code{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.manual-code .input{font-family:ui-monospace,monospace;font-size:13px}
+.manual-code .btn{align-self:flex-start}

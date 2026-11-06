@@ -1,0 +1,432 @@
+{
+ "ev": [
+  {
+   "id": 13,
+   "host": "e2e-h1-0932.testnet",
+   "title": "E2E2 \u00b7 Lagos Builders Night",
+   "stake": 0.5,
+   "cap": 6,
+   "guests": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g6"
+   ],
+   "shows": [
+    "g1",
+    "g2",
+    "g3",
+    "g4"
+   ],
+   "deadline": 1793981954323,
+   "txs": {
+    "create": "4V6ZAbyichJNsNqj9esgGsJxtEqKsLa1dfyvLJchHPKz",
+    "deposit:g1": "HzqCTgGp1PUANYE6UyFmLsH1BGjLTS4SnicbFds9AYau",
+    "deposit:g2": "EdPij1XDWf9LzHxdzYJLjC8QVeJGVWbskwrgJFmCCsdR",
+    "deposit:g3": "3TQnkFQED6ssKWHmpZXCnto5REPs7PseHp5HFACJCyry",
+    "deposit:g4": "AY4sCRi2jfpBFQfvQreeZD8nPZAFvYmYjko2jcgfkTW1",
+    "deposit:g5": "8Zskx1zQ9ybXdoVTxo8SFqDZyx5VU9oT4j4kZ5jLcAix",
+    "deposit:g6": "4t4VvhehHHBgwqXUYAgz8eiRbd7HxZEUfUxAmVXywPft",
+    "check_in:g1": "Ehg9bh7SdVXPPL6ZUUidvHF9HtdZvoGzBnZyAoXE9mN4",
+    "check_in:g2": "H3dbrodNGa64s88YkAjDg6uLjsSzhPUa57dChzWhy4hi",
+    "check_in:g3": "AnYKBE8Qhi5JdhGvBzR7RfgkD1hJkSpYC2XGrna91cAU",
+    "check_in:g4": "Enr9YbHDNKNocRdHDb79srxeC8FnDVMJkvaejsKieP5J",
+    "close": "92msvyafL9apYdoYiHCtSeUBCFgGuegR7QwtPjDa3TCq"
+   },
+   "host_dust_yocto": -1476761487349500000000,
+   "claims": {
+    "g1": {
+     "tx": "C8x2H3M3ciG4Qc5ieZCJuTVeFZNQtn6JDf9sz6wmNoEM",
+     "transfer_yocto": "750000000000000000000000",
+     "net_delta_yocto": "748441104974149900000000"
+    },
+    "g2": {
+     "tx": "J3c7gB1veLzVoA3g2PXQ6CX5T64okXfgb7HVRhFfJJM1",
+     "transfer_yocto": "750000000000000000000000",
+     "net_delta_yocto": "748441265970027300000000"
+    },
+    "g3": {
+     "tx": "CL87BVKz2LrPs932REeWCHxRGhnmEEADJzuMnXAaoW1P",
+     "transfer_yocto": "750000000000000000000000",
+     "net_delta_yocto": "748441364243795700000000"
+    },
+    "g4": {
+     "tx": "21nD1P9CemtNvgJKoGzbAH1JEoLKuQyFVHahdj21La4q",
+     "transfer_yocto": "750000000000000000000000",
+     "net_delta_yocto": "748441390033328600000000"
+    }
+   },
+   "view": {
+    "id": 13,
+    "host": "e2e-h1-0932.testnet",
+    "title": "E2E2 \u00b7 Lagos Builders Night",
+    "deposit": "500000000000000000000000",
+    "check_in_deadline_ms": 1793981954323,
+    "closed": true,
+    "guest_count": 6,
+    "checked_in_count": 4,
+    "claimed_count": 4,
+    "payout_per_attendee": "750000000000000000000000",
+    "total_pot": "3000000000000000000000000",
+    "description": "Automated end-to-end test run with fresh faucet wallets.",
+    "category": "E2E test",
+    "location": "Lagos \u00b7 NEAR testnet",
+    "cover": "stage",
+    "starts_ms": 1793980154323,
+    "capacity": 6,
+    "refund_mode": false,
+    "created_ms": 1793981115840
+   }
+  },
+  {
+   "id": 14,
+   "host": "e2e-h2-0932.testnet",
+   "title": "E2E2 \u00b7 Everyone Pulls Up",
+   "stake": 0.3,
+   "cap": 0,
+   "guests": [
+    "g6",
+    "g7",
+    "g8"
+   ],
+   "shows": [
+    "g6",
+    "g7",
+    "g8"
+   ],
+   "deadline": 1793981986806,
+   "txs": {
+    "create": "8BnxdiwPg3AWbYcY1EVSmtxkdGXfPuybY2qMCqfiZ8rG",
+    "deposit:g6": "GaynLWWeqvNyTJVX68vrFSZwdTTtdbk6vgL2jMt1mECV",
+    "deposit:g7": "4P8FHh1B6n67NCkXVkDfs1aSuj4cuFDFUo9aoXhr8175",
+    "deposit:g8": "AxJCrCx7HdEyNmRVggqVakCZk256intb7dmvA6FH5tZa",
+    "check_in:g6": "9UZ6Rt3iQFFNmAfWqUfDa3sLZZdKd7LS16XyuCBgtwkG",
+    "check_in:g7": "C1ENZwhyzTW4vR69a6t4cdAk4z8HhEDdfMTtG7WDroqi",
+    "check_in:g8": "6DW9VhGDp414aAhwauVXtBG11xFY7vT7enmSE4GBgkpm",
+    "close": "A5jXqCJXnmaVxpxtHi23WLKUJivr3T12TqeufbzcvhAV"
+   },
+   "host_dust_yocto": 0,
+   "claims": {
+    "g6": {
+     "tx": "hfbEU1JLG2hbwN2d1Ae5W1hwx27VA4A6XCjz1AL93Y7",
+     "transfer_yocto": "300000000000000000000000",
+     "net_delta_yocto": "298441464975230200000000"
+    },
+    "g7": {
+     "tx": "AgUrq8ytHqfVdqvyanKfkRYCgZBARJhfq4UpLyEvQLxX",
+     "transfer_yocto": "300000000000000000000000",
+     "net_delta_yocto": "298441487893718000000000"
+    },
+    "g8": {
+     "tx": "AjS6F36334oe6VEkZ7SkE6fKDyYhN9hCTdguzN61tfu9",
+     "transfer_yocto": "300000000000000000000000",
+     "net_delta_yocto": "298441510812205800000000"
+    }
+   },
+   "view": {
+    "id": 14,
+    "host": "e2e-h2-0932.testnet",
+    "title": "E2E2 \u00b7 Everyone Pulls Up",
+    "deposit": "300000000000000000000000",
+    "check_in_deadline_ms": 1793981986806,
+    "closed": true,
+    "guest_count": 3,
+    "checked_in_count": 3,
+    "claimed_count": 3,
+    "payout_per_attendee": "300000000000000000000000",
+    "total_pot": "900000000000000000000000",
+    "description": "Automated end-to-end test run with fresh faucet wallets.",
+    "category": "E2E test",
+    "location": "Lagos \u00b7 NEAR testnet",
+    "cover": "stage",
+    "starts_ms": 1793980186806,
+    "capacity": 0,
+    "refund_mode": false,
+    "created_ms": 1793981148590
+   }
+  },
+  {
+   "id": 15,
+   "host": "e2e-h1-0932.testnet",
+   "title": "E2E2 \u00b7 Nobody Came (refund)",
+   "stake": 0.2,
+   "cap": 0,
+   "guests": [
+    "g2",
+    "g3"
+   ],
+   "shows": [],
+   "deadline": 1793982006161,
+   "txs": {
+    "create": "8UsCkFhVcP68qt7VFCUQwjEScAkTL9GAwYAJXoxCF538",
+    "deposit:g2": "9pNb8BoXkh4JTJE1JcY2SpmqvMmrzxWudwhu5bXMUoGS",
+    "deposit:g3": "DWgWLUutjsmEenKQMbgCjPqNKMQUjwzT3cX84S5wkwqg",
+    "close": "ALcRPg66XaGnJVVEHcRjFYjfXFNiNKqFRmi8XkzaVGRY"
+   },
+   "host_dust_yocto": -1476145386100000000000,
+   "claims": {
+    "g2": {
+     "tx": "FA6gNwphjFkSXhQvzSd6wh84Cafi1Urmmhy2iyJ8fAbH",
+     "transfer_yocto": "200000000000000000000000",
+     "net_delta_yocto": "198441522682827700000000"
+    },
+    "g3": {
+     "tx": "63C5amK1N8b3NciNLYWjzWZ2MSuc3icx1jCYqZ6LDFxq",
+     "transfer_yocto": "200000000000000000000000",
+     "net_delta_yocto": "198441539414877300000000"
+    }
+   },
+   "view": {
+    "id": 15,
+    "host": "e2e-h1-0932.testnet",
+    "title": "E2E2 \u00b7 Nobody Came (refund)",
+    "deposit": "200000000000000000000000",
+    "check_in_deadline_ms": 1793982006161,
+    "closed": true,
+    "guest_count": 2,
+    "checked_in_count": 0,
+    "claimed_count": 2,
+    "payout_per_attendee": "200000000000000000000000",
+    "total_pot": "400000000000000000000000",
+    "description": "Automated end-to-end test run with fresh faucet wallets.",
+    "category": "E2E test",
+    "location": "Lagos \u00b7 NEAR testnet",
+    "cover": "stage",
+    "starts_ms": 1793980206161,
+    "capacity": 0,
+    "refund_mode": true,
+    "created_ms": 1793981169356
+   }
+  },
+  {
+   "id": 16,
+   "host": "e2e-h2-0932.testnet",
+   "title": "E2E2 \u00b7 Dust Split (1 of 4 flakes)",
+   "stake": 0.1,
+   "cap": 0,
+   "guests": [
+    "g1",
+    "g4",
+    "g5",
+    "g7"
+   ],
+   "shows": [
+    "g1",
+    "g4",
+    "g7"
+   ],
+   "deadline": 1793982022069,
+   "txs": {
+    "create": "FHRGdbboNuKw4joGJcLD2GykTPATNu2ifyJrcZ8mDdAo",
+    "deposit:g1": "Gc6m5rPmDXMCTTXQb9xjvZk7bPDegLyEcHavnEgWNEde",
+    "deposit:g4": "G64THpNG6D6pv6wdFoXm47ARCYnsXDTrMAbHrowVMA8c",
+    "deposit:g5": "9h6sLkotDqkAZDYiSpfhaBRf4jKpAgQLKYrAHU1qqosU",
+    "deposit:g7": "ELreZSVubmhxZQzStqhHsaW9rUZcDrtztkBZhixE8Ce",
+    "check_in:g1": "4zryXAxtGK9DnFLUH15FUQ1qtVB7ZbzLt8RSrwrj7AjG",
+    "check_in:g4": "A11yHtsJYkkz4yj9EKYDzFDcc7RqA4WP9ztWxwptMp5o",
+    "check_in:g7": "H6xEjG8vXLq6w6FqKrPfVc1BH5Kcmf9Cdrwtj5Z2xd2j",
+    "close": "ArBjpCC6LqZhV63p9tT6b3NXAor6mPmhnwC5LCXr8hMr"
+   },
+   "host_dust_yocto": -1522426048120199999999,
+   "claims": {
+    "g1": {
+     "tx": "9fu3vkrYguWoSLWQSexm7hethAvJ5fNPmTmKXTut2ePy",
+     "transfer_yocto": "133333333333333333333333",
+     "net_delta_yocto": "131774860436107933333333"
+    },
+    "g4": {
+     "tx": "AgBo1kDUxsktCGm38hmEAzx9oTQAJA7PQBKTDwnpGWdn",
+     "transfer_yocto": "133333333333333333333333",
+     "net_delta_yocto": "131774883354595733333333"
+    },
+    "g7": {
+     "tx": "DycMBEzBFnof2iNWc1JPwTzLpbNQe3pzDF9htZKvn6uV",
+     "transfer_yocto": "133333333333333333333333",
+     "net_delta_yocto": "131774900086645333333333"
+    }
+   },
+   "view": {
+    "id": 16,
+    "host": "e2e-h2-0932.testnet",
+    "title": "E2E2 \u00b7 Dust Split (1 of 4 flakes)",
+    "deposit": "100000000000000000000000",
+    "check_in_deadline_ms": 1793982022069,
+    "closed": true,
+    "guest_count": 4,
+    "checked_in_count": 3,
+    "claimed_count": 3,
+    "payout_per_attendee": "133333333333333333333333",
+    "total_pot": "400000000000000000000000",
+    "description": "Automated end-to-end test run with fresh faucet wallets.",
+    "category": "E2E test",
+    "location": "Lagos \u00b7 NEAR testnet",
+    "cover": "stage",
+    "starts_ms": 1793980222069,
+    "capacity": 0,
+    "refund_mode": false,
+    "created_ms": 1793981184725
+   }
+  }
+ ],
+ "B0": {
+  "e2e-h1-0932.testnet": 9897023707211499200000000,
+  "e2e-h2-0932.testnet": 9897024899960023300000000,
+  "e2e-g1-0932.testnet": 9396918154878023300000000,
+  "e2e-g2-0932.testnet": 9296916082733403000000000,
+  "e2e-g3-0932.testnet": 9296913409743661200000000,
+  "e2e-g4-0932.testnet": 9396913640028494800000000,
+  "e2e-g5-0932.testnet": 9396912982178418700000000,
+  "e2e-g6-0932.testnet": 9196916184691506100000000,
+  "e2e-g7-0932.testnet": 9698456551594214100000000,
+  "e2e-g8-0932.testnet": 9698455783469599400000000
+ },
+ "B1": {
+  "e2e-h1-0932.testnet": 9783893493140926000000000,
+  "e2e-h2-0932.testnet": 9783401760599723900000001,
+  "e2e-g1-0932.testnet": 9673327694831463933333333,
+  "e2e-g2-0932.testnet": 9540716818566848500000000,
+  "e2e-g3-0932.testnet": 9540711520195700000000000,
+  "e2e-g4-0932.testnet": 9674045643384314533333333,
+  "e2e-g5-0932.testnet": 8793635353616666300000000,
+  "e2e-g6-0932.testnet": 8692081916302877900000000,
+  "e2e-g7-0932.testnet": 9725404474584324333333333,
+  "e2e-g8-0932.testnet": 9693338170750054100000000
+ },
+ "C0": 13667711338859657999999998,
+ "C1": 13917711338859657999999998,
+ "R": {
+  "events": [],
+  "edge": [
+   {
+    "case": "capacity full \u2192 deposit rejected",
+    "method": "deposit",
+    "signer": "e2e-g7-0932.testnet",
+    "tx": "By6vUkvTz2BNDUYWvfFnfcdU1vgpAUYQobTsSehp14g3",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "wrong deposit amount rejected",
+    "method": "deposit",
+    "signer": "e2e-g1-0932.testnet",
+    "tx": "Dk3oDhnRmp72fzVLY29gikv7xe3srzXLUFwDqghVfASG",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "same guest deposits twice rejected",
+    "method": "deposit",
+    "signer": "e2e-g6-0932.testnet",
+    "tx": "7yoBkwSsrL9if3XXDrFZVJUh1Z132Pzr9X8BzqixnmGF",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "host deposits into own event rejected",
+    "method": "deposit",
+    "signer": "e2e-h1-0932.testnet",
+    "tx": "HVMALNxWBJriuuExpYtN8o8xajNwACetiGXsfnmKjKp7",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "non-host check-in rejected",
+    "method": "check_in",
+    "signer": "e2e-g1-0932.testnet",
+    "tx": "CsBAoSYLtR2H4GfRUkh2npo1cEAd2MTuED7FshhQoSVe",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "forged QR ticket rejected",
+    "method": "check_in",
+    "signer": "e2e-h1-0932.testnet",
+    "tx": "BX6CDVMdjSAS21141ufZw53Z9mk2mACmrSpDgujwy6nB",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "check-in of non-depositor rejected",
+    "method": "check_in",
+    "signer": "e2e-h1-0932.testnet",
+    "tx": "CNqtazwkzGvfQg8zzVgC1bEbHzHGFycT6NttqyvmuaDT",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "early close by non-host rejected",
+    "method": "close",
+    "signer": "e2e-g8-0932.testnet",
+    "tx": "6oUwfxLGD6FCjsVeK7gh3zXug47XLJ7aEaXpVaSwGzdE",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "claim before close rejected",
+    "method": "claim",
+    "signer": "e2e-g1-0932.testnet",
+    "tx": "3oWpFdKzi9v5uDPehC7jRD5gYwWLSgM9yYzgKCVHscyk",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "double check-in rejected",
+    "method": "check_in",
+    "signer": "e2e-h1-0932.testnet",
+    "tx": "E4ssVd87V65z2xr8AESZXVvVRMrxZtsqxDRkXvKn3mqU",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "late deposit after deadline rejected",
+    "method": "deposit",
+    "signer": "e2e-g8-0932.testnet",
+    "tx": "Dteys6LkJdfnrGEumQGvS8YLidGz8KAS92gSJjEQs5hZ",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "late check-in after deadline rejected",
+    "method": "check_in",
+    "signer": "e2e-h1-0932.testnet",
+    "tx": "3xsmQiwDRNtZ8suF9JBnrEeZZsrW1FdHFJQhbaYLFq4R",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "double claim rejected",
+    "method": "claim",
+    "signer": "e2e-g1-0932.testnet",
+    "tx": "6kEDGUYTSYusrJdmp9DU6ASAzGL2Nk9BczsH7k2YM1Ef",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "no-show claim rejected",
+    "method": "claim",
+    "signer": "e2e-g5-0932.testnet",
+    "tx": "9PJF2Jyyz81iyHA6QU2XDEyAh4asAyhyNia3Fv1L4nUC",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "stranger claim rejected",
+    "method": "claim",
+    "signer": "e2e-g8-0932.testnet",
+    "tx": "3pxNPh8yjfAuUDqBxUAy6Tos5EXezXCNeAUxgLBjgCjF",
+    "rejected": true,
+    "error": ""
+   },
+   {
+    "case": "second close rejected",
+    "method": "close",
+    "signer": "e2e-h1-0932.testnet",
+    "tx": "D5NxK7kcW6kqcUZ3WN5LV1rsH1q4W2pKoCAVZmG31sMN",
+    "rejected": true,
+    "error": ""
+   }
+  ]
+ }
+}

@@ -145,3 +145,42 @@ MIT. See `LICENSE`.
 ## Other project disclosure (HACKATHON Q-015)
 
 Same builder also has **Agent Bounty Board** (Celo / Loops hackathon). Independent codebase and chain. This repo is NEAR-only.
+
+## Tested end-to-end (Nov 6, 2026, NEAR testnet)
+
+Fresh faucet wallets (`e2e-h1/h2-0932`, `e2e-g1…g8-0932`, plus `uihost`/`uig1-3` sub-accounts) ran real events on `app.pullup-970962.testnet`. Scripts: `scripts/e2e.py` (contract), `scripts/e2e_ui.py` (browser UI), `scripts/e2e_cleanup.py`. All guests and hosts are our own test wallets.
+
+| # | Event | Stake | Guests | Showed | No-shows | Payout each | Close | Claims |
+|---|---|---|---|---|---|---|---|---|
+| 13 | Lagos Builders Night | 0.5 N | 6 | 4 | 2 | 0.7500 N | [92msvyaf](https://testnet.nearblocks.io/txns/92msvyafL9apYdoYiHCtSeUBCFgGuegR7QwtPjDa3TCq) | [g1](https://testnet.nearblocks.io/txns/C8x2H3M3ciG4Qc5ieZCJuTVeFZNQtn6JDf9sz6wmNoEM), [g2](https://testnet.nearblocks.io/txns/J3c7gB1veLzVoA3g2PXQ6CX5T64okXfgb7HVRhFfJJM1), [g3](https://testnet.nearblocks.io/txns/CL87BVKz2LrPs932REeWCHxRGhnmEEADJzuMnXAaoW1P), [g4](https://testnet.nearblocks.io/txns/21nD1P9CemtNvgJKoGzbAH1JEoLKuQyFVHahdj21La4q) |
+| 14 | Everyone Pulls Up | 0.3 N | 3 | 3 | 0 | 0.3000 N | [A5jXqCJX](https://testnet.nearblocks.io/txns/A5jXqCJXnmaVxpxtHi23WLKUJivr3T12TqeufbzcvhAV) | [g6](https://testnet.nearblocks.io/txns/hfbEU1JLG2hbwN2d1Ae5W1hwx27VA4A6XCjz1AL93Y7), [g7](https://testnet.nearblocks.io/txns/AgUrq8ytHqfVdqvyanKfkRYCgZBARJhfq4UpLyEvQLxX), [g8](https://testnet.nearblocks.io/txns/AjS6F36334oe6VEkZ7SkE6fKDyYhN9hCTdguzN61tfu9) |
+| 15 | Nobody Came (refund) | 0.2 N | 2 | 0 | 2 | 0.2000 N (refund) | [ALcRPg66](https://testnet.nearblocks.io/txns/ALcRPg66XaGnJVVEHcRjFYjfXFNiNKqFRmi8XkzaVGRY) | [g2](https://testnet.nearblocks.io/txns/FA6gNwphjFkSXhQvzSd6wh84Cafi1Urmmhy2iyJ8fAbH), [g3](https://testnet.nearblocks.io/txns/63C5amK1N8b3NciNLYWjzWZ2MSuc3icx1jCYqZ6LDFxq) |
+| 16 | Dust Split (1 of 4 flakes) | 0.1 N | 4 | 3 | 1 | 0.1333 N | [ArBjpCC6](https://testnet.nearblocks.io/txns/ArBjpCC6LqZhV63p9tT6b3NXAor6mPmhnwC5LCXr8hMr) | [g1](https://testnet.nearblocks.io/txns/9fu3vkrYguWoSLWQSexm7hethAvJ5fNPmTmKXTut2ePy), [g4](https://testnet.nearblocks.io/txns/AgBo1kDUxsktCGm38hmEAzx9oTQAJA7PQBKTDwnpGWdn), [g7](https://testnet.nearblocks.io/txns/DycMBEzBFnof2iNWc1JPwTzLpbNQe3pzDF9htZKvn6uV) |
+| 17, 18 | UI Test · Lagos Rooftop (via website) | 0.2 N | 3 | 2 | 1 | 0.3000 N | host “Close & settle” button | claimed via UI |
+| 9–12 | Abandoned run (deadline passed, nobody checked in) | 0.1–0.5 N | 2–6 | 0 | all | full refund | closed by a stranger | all refunded |
+
+Each claim's on-chain transfer matched the payout exactly (e.g. 4 attendees of #13 each received 0.75 N = 0.5 stake + 2×0.5/4). No-shows received nothing. Event #16's 0.1/3 split leaves 1 yocto of dust, sent to the host at close.
+
+**Rejected as expected (each one a real failed tx):**
+
+- ✅ capacity full → deposit rejected: [By6vUkvT](https://testnet.nearblocks.io/txns/By6vUkvTz2BNDUYWvfFnfcdU1vgpAUYQobTsSehp14g3)
+- ✅ wrong deposit amount rejected: [Dk3oDhnR](https://testnet.nearblocks.io/txns/Dk3oDhnRmp72fzVLY29gikv7xe3srzXLUFwDqghVfASG)
+- ✅ same guest deposits twice rejected: [7yoBkwSs](https://testnet.nearblocks.io/txns/7yoBkwSsrL9if3XXDrFZVJUh1Z132Pzr9X8BzqixnmGF)
+- ✅ host deposits into own event rejected: [HVMALNxW](https://testnet.nearblocks.io/txns/HVMALNxWBJriuuExpYtN8o8xajNwACetiGXsfnmKjKp7)
+- ✅ non-host check-in rejected: [CsBAoSYL](https://testnet.nearblocks.io/txns/CsBAoSYLtR2H4GfRUkh2npo1cEAd2MTuED7FshhQoSVe)
+- ✅ forged QR ticket rejected: [BX6CDVMd](https://testnet.nearblocks.io/txns/BX6CDVMdjSAS21141ufZw53Z9mk2mACmrSpDgujwy6nB)
+- ✅ check-in of non-depositor rejected: [CNqtazwk](https://testnet.nearblocks.io/txns/CNqtazwkzGvfQg8zzVgC1bEbHzHGFycT6NttqyvmuaDT)
+- ✅ early close by non-host rejected: [6oUwfxLG](https://testnet.nearblocks.io/txns/6oUwfxLGD6FCjsVeK7gh3zXug47XLJ7aEaXpVaSwGzdE)
+- ✅ claim before close rejected: [3oWpFdKz](https://testnet.nearblocks.io/txns/3oWpFdKzi9v5uDPehC7jRD5gYwWLSgM9yYzgKCVHscyk)
+- ✅ double check-in rejected: [E4ssVd87](https://testnet.nearblocks.io/txns/E4ssVd87V65z2xr8AESZXVvVRMrxZtsqxDRkXvKn3mqU)
+- ✅ late deposit after deadline rejected: [Dteys6Lk](https://testnet.nearblocks.io/txns/Dteys6LkJdfnrGEumQGvS8YLidGz8KAS92gSJjEQs5hZ)
+- ✅ late check-in after deadline rejected: [3xsmQiwD](https://testnet.nearblocks.io/txns/3xsmQiwDRNtZ8suF9JBnrEeZZsrW1FdHFJQhbaYLFq4R)
+- ✅ double claim rejected: [6kEDGUYT](https://testnet.nearblocks.io/txns/6kEDGUYTSYusrJdmp9DU6ASAzGL2Nk9BczsH7k2YM1Ef)
+- ✅ no-show claim rejected: [9PJF2Jyy](https://testnet.nearblocks.io/txns/9PJF2Jyyz81iyHA6QU2XDEyAh4asAyhyNia3Fv1L4nUC)
+- ✅ stranger claim rejected: [3pxNPh8y](https://testnet.nearblocks.io/txns/3pxNPh8yjfAuUDqBxUAy6Tos5EXezXCNeAUxgLBjgCjF)
+- ✅ second close rejected: [D5NxK7kc](https://testnet.nearblocks.io/txns/D5NxK7kcW6kqcUZ3WN5LV1rsH1q4W2pKoCAVZmG31sMN)
+
+**Website flow (Playwright, headless Chromium):** create event at `/create` → 3 guests stake & RSVP → QR ticket shown → host door scanner checks in 2 (pasted ticket code) → replaying a used code shows “This ticket was already used” → host Close & settle → 2 attendees claim 0.3 N, no-show sees no claim button. Past, Host dashboard and ticker update. Screenshots: `shots/e2e/`.
+
+The browser tests use a key signer compiled in only when `VITE_TEST_SIGNER=1`. Production builds don't include it. Still manual: a real wallet popup (MyNearWallet/Meteor) and phone-camera QR scanning.
+

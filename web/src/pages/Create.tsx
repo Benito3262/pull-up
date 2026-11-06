@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { callMethod, parseNear, viewMethod } from '../lib/near'
+import { callMethodFull, parseNear, viewMethod, friendlyError } from '../lib/near'
 import { Cover, COVERS } from '../components/Cover'
 import { PageHead, useToast } from '../components/UI'
 import { useAccount, connect } from '../components/WalletButton'
@@ -33,14 +33,15 @@ export function Create() {
       const starts = new Date(f.starts).getTime()
       const deadline = starts + Number(f.hours) * 3600000
       const next = await viewMethod<number>('get_next_event_id')
-      await callMethod('create_event', {
+      const res = await callMethodFull('create_event', {
         title: f.title.trim(), deposit: parseNear(f.deposit), check_in_deadline_ms: deadline,
         meta: { description: f.description, category: f.category, location: f.location, cover: f.cover, starts_ms: starts, capacity: Number(f.capacity) || 0 },
       }, parseNear('0.05'), '100000000000000')
       toast('Event created on NEAR', 'ok')
-      nav(`/e/${next}`)
+      const id = typeof res.value === 'number' ? res.value : next
+      nav(`/e/${id}`)
     } catch (x) {
-      setErr(x instanceof Error ? x.message : String(x))
+      setErr(friendlyError(x))
     } finally { setBusy(false) }
   }
 

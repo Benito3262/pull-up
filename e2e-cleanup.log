@@ -1,0 +1,22 @@
+10 [['e2e-g6-0932.testnet', 'Deposited'], ['e2e-g7-0932.testnet', 'Deposited'], ['e2e-g8-0932.testnet', 'Deposited']]
+close e2e-g8-0932.testnet 9FPBoxsYP3b9jMnzX5sT1ZgR3zXZBh7WbsPXtH6BhyEL None
+claim e2e-g6-0932.testnet 9rMgvSHQx7MG1ykkv8TzqSynqLFAYzHdewBV5r2N7r7M None
+claim e2e-g7-0932.testnet GSSjFTTqrLHfZrXYSYdFkbmG2XnSryuPmCVe2z2W3k2r None
+claim e2e-g8-0932.testnet GbWfgbnGidbMJ1ni9Anj5mvzquDDEeVEGTCSgs2NiUzS None
+11 [['e2e-g2-0932.testnet', 'Deposited'], ['e2e-g3-0932.testnet', 'Deposited']]
+close e2e-g8-0932.testnet 31XbWdPrwYqNaYj5aL27wzLURsWSqqbxSotMHv9hQ8To None
+claim e2e-g2-0932.testnet DrEm1XbcygPgJ2fLiXWAFBQMJXdQcWQzvzx1X1UwrbFt None
+claim e2e-g3-0932.testnet HmST8hcyjuEf6MAN8uuJaTT9By1XC3meAxdBHwbNWsYk None
+12 [['e2e-g1-0932.testnet', 'Deposited'], ['e2e-g4-0932.testnet', 'Deposited'], ['e2e-g5-0932.testnet', 'Deposited']]
+close e2e-g8-0932.testnet GNXgVsaVPoDwvPc9bQyEvXT2vFEnLbMADuEJCo6BiCG7 None
+claim e2e-g1-0932.testnet HZ1XpoGbC5jKkt6ERPfrQ8hdtgNzbJXFi9Wewv7kXEL9 None
+claim e2e-g4-0932.testnet HroyoH6DUQG1us3ufCxewMs3wW9xaeiA4wstiyL93GxS None
+claim e2e-g5-0932.testnet HYtjVaaRjBZ3ncNx87V1FHHmEnm5SSbSm3tQT2pPYye None
+9 [['e2e-g1-0932.testnet', 'Deposited'], ['e2e-g2-0932.testnet', 'Deposited'], ['e2e-g3-0932.testnet', 'Deposited'], ['e2e-g4-0932.testnet', 'Deposited'], ['e2e-g5-0932.testnet', 'Deposited'], ['e2e-g6-0932.testnet', 'Deposited']]
+close e2e-g8-0932.testnet GjnuFyGiLKpWKfcpZKcSxmhKJ4DaG4JqGAs599jF35fJ None
+claim e2e-g1-0932.testnet G1H6m4XiU3srgDKsq9QwxTjCPSyay4mU32vsgsNbobA4 None
+claim e2e-g2-0932.testnet B6jTMhh24HbmXsg6idBUbmMQGVE1u2MzNn7HcgK2K5KJ None
+claim e2e-g3-0932.testnet EpKJ2JYgwELRo8Yt3TxcRPJzhtZSKGW8Y2g3pUekMTpM None
+claim e2e-g4-0932.testnet mbCZouTQ9tdLDubwxmuknB9pQVLgFgM4HZWtdSLwYhZ None
+claim e2e-g5-0932.testnet Aq92CrSEnhA9Ew6GuyzH5KMVWT956CgXvc1pwLXhT5vp None
+claim e2e-g6-0932.testnet CJbZeHoTcmiDnvaieHWqNNe1MBB5fz2kW6tTG8HcHSfP None

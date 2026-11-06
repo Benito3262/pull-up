@@ -1,0 +1,1 @@
+{"event": 17, "replay_error": "{\"index\":0,\"kind\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"WebAssembly trap: An `unreachable` opcode was executed.\"}}}}", "claim_label_0": "Claim 0.3 NEAR", "claim_label_1": "Claim 0.3 NEAR", "noshow_claim_button": 0, "10-past": 1, "12-leaderboard": 0, "13-home-stats-ticker": 0, "14-explore": 0, "host_dash": 1}

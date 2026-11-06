@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Html5Qrcode } from 'html5-qrcode'
-import { callMethod, getModal, txUrl, viewMethod } from '../lib/near'
+import { callMethod, getModal, txUrl, viewMethod, friendlyError } from '../lib/near'
 import { useToast } from '../components/UI'
 import type { EventView } from '../lib/near'
 import { useAccount } from '../components/WalletButton'
@@ -32,22 +32,12 @@ export function Scan() {
       .catch((e) => setError(String(e)))
   }, [eventId])
 
-  useEffect(() => {
-    if (!account || !ev || account !== ev.host) return
-    const elId = 'pullup-qr-reader'
-    const scanner = new Html5Qrcode(elId)
-    let stopped = false
-
-    scanner
-      .start(
-        { facingMode: 'environment' },
-        { fps: 8, qrbox: { width: 240, height: 240 } },
-        async (decoded) => {
+  const handleCode = async (decoded: string) => {
           if (scanning.current || decoded === lastCode.current) return
           lastCode.current = decoded
           scanning.current = true
           try {
-            const data = JSON.parse(decoded) as Payload
+            const data = JSON.parse(decoded.trim()) as Payload
             if (data.e !== eventId) throw new Error('Wrong event QR')
             setBusy(true)
             setError(null)
@@ -59,15 +49,30 @@ export function Scan() {
             setTx(hash)
             setMsg(`Checked in ${data.g}`)
             toast(`✓ ${data.g} pulled up`, 'ok')
+            viewMethod<[string, string][]>('list_guests', { event_id: eventId }).then(setGuests).catch(() => {})
           } catch (err) {
-            setError(err instanceof Error ? err.message : String(err))
+            lastCode.current = ''
+            setError(friendlyError(err))
           } finally {
             setBusy(false)
             setTimeout(() => {
               scanning.current = false
             }, 1500)
           }
-        },
+  }
+  const [manual, setManual] = useState('')
+
+  useEffect(() => {
+    if (!account || !ev || account !== ev.host) return
+    const elId = 'pullup-qr-reader'
+    const scanner = new Html5Qrcode(elId)
+    let stopped = false
+
+    scanner
+      .start(
+        { facingMode: 'environment' },
+        { fps: 8, qrbox: { width: 240, height: 240 } },
+        (decoded) => { void handleCode(decoded) },
         () => {},
       )
       .catch((e) => setError(`Camera: ${e}`))
@@ -108,6 +113,13 @@ export function Scan() {
       <div className="card">
         <div id="pullup-qr-reader" className="scanner" />
       </div>
+      {account && ev && account === ev.host && (
+        <form className="card manual-code" onSubmit={(e) => { e.preventDefault(); void handleCode(manual); setManual('') }}>
+          <label className="muted">No camera? Paste the guest's ticket code</label>
+          <input className="input" data-testid="manual-code" value={manual} onChange={(e) => setManual(e.target.value)} placeholder='{"e":12,"g":"guest.testnet","t":"…"}' />
+          <button className="btn" type="submit" disabled={busy || !manual.trim()}>Check in</button>
+        </form>
+      )}
       {tx && (
         <p className="muted">
           Tx:{' '}

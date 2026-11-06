@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getModal, getSelector } from '../lib/near'
+import { getModal, getSelector, testAccount } from '../lib/near'
 import { shortAccount } from '../lib/config'
 import { Avatar } from './UI'
 
 export function useAccount(): string | null {
   const [accountId, setAccountId] = useState<string | null>(null)
   useEffect(() => {
+    const t = testAccount()
+    if (t) { setAccountId(t.accountId); return }
     let sub: { unsubscribe: () => void } | null = null
     ;(async () => {
       const selector = await getSelector()

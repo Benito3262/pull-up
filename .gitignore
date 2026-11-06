@@ -15,3 +15,4 @@ contract/target/
 web/node_modules/
 contract/Cargo.lock.bak
 .secrets/
+test-wallets/
