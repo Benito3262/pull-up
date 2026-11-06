@@ -6,7 +6,7 @@ Built at **NEAR HACKATHON**. Tracks: `realworld` (Real-World Money), `social` (S
 
 ## Live demo
 
-https://pull-up.vercel.app
+https://pullup-near.vercel.app
 
 Public repo: https://github.com/Benito3262/pull-up
 
