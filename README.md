@@ -12,6 +12,33 @@ Public repo: https://github.com/Benito3262/pull-up
 
 Illia named this mechanic ("kickback deposits for events"). Nobody had shipped it in the demo posts we checked, so we did.
 
+## The site
+
+Polished multi-page app with its own brand (logo + mascot **Pip**, a little map pin who always shows up), dark/light themes, and a live on-chain ticker.
+
+| Page | Route | Data |
+| --- | --- | --- |
+| Home | `/` | hero, animated how-it-works, **live stats** from `get_stats` + `list_events` (events, NEAR staked, show-up rate, paid out) |
+| Explore | `/explore` | live + upcoming events, filters (live/upcoming, category, search, sort), countdowns, spots left |
+| Event | `/e/:id` | live attendee list (polls `list_guests`), stake, projected payout, QR ticket, share, host tools, on-chain receipts |
+| Past events | `/past` | settled events: show-up ring, flaked count, payout per attendee, bonus |
+| Host | `/create` | form with cover picker + live preview, templates via `?t=` |
+| Host dashboard | `/host`, scanner `/e/:id/scan` | your events, RSVPs, show-up, camera QR check-in |
+| My tickets | `/tickets` | your RSVPs + QR stubs |
+| Ideas | `/ideas` | event templates + suggest-an-event board (stored on device) |
+| Leaderboard | `/leaderboard` | "never flakes" streaks computed from every guest list |
+| How it works / FAQ | `/how` | formula + FAQ |
+
+A live ticker (top of every page) reads `recent_activity` from the contract, and pops a toast whenever a new on-chain action lands.
+
+### Live vs seeded
+
+Everything on the site is read live from the contract. The demo events were **seeded with real testnet transactions** by `scripts/seed.py` from test accounts (`*.pu-host-970962.testnet`, `pu-g*-970962.testnet`), so they are self-tests, not outside users: 3 settled events (with claims), 2 live, 3 upcoming. Every seed tx hash is listed in `seed-txs.txt` and shown under **On-chain receipts** on each event page. Starter ideas on `/ideas` are examples.
+
+### Screenshots
+
+`shots/` holds desktop + mobile captures of home, explore, event, past, ideas, leaderboard, how, create, tickets and host. Regenerate with `python3 scripts/shots.py https://pullup-near.vercel.app`.
+
 ## Problem
 
 RSVPs are cheap talk. Friends say they're coming, then ghost. The host paid for space, food, or a table. Pull Up makes the RSVP costly and fair: deposit to say you'll come; show up and you are made whole (and tipped by whoever didn't).
@@ -30,11 +57,13 @@ RSVPs are cheap talk. Friends say they're coming, then ghost. The host paid for 
 | | |
 | --- | --- |
 | Network | NEAR **testnet** |
-| Account | `pullup-970962.testnet` |
-| Explorer | https://testnet.nearblocks.io/address/pullup-970962.testnet |
-| Deploy tx | https://testnet.nearblocks.io/txns/DDZVRGci2rfJetSrx2e9NbneEkTzXm9NWXzDnK3JEauX |
+| Account (v2, current) | `app.pullup-970962.testnet` |
+| Explorer | https://testnet.nearblocks.io/address/app.pullup-970962.testnet |
+| v1 (original demo below) | `pullup-970962.testnet` |
 | Language | Rust, `near-sdk` 5.x |
-| Methods | `create_event`, `deposit`, `check_in`, `close`, `claim`, views `get_event`, `list_guests`, `get_guest_status` |
+| Methods | `create_event(title, deposit, check_in_deadline_ms, meta?)`, `deposit`, `check_in`, `close`, `claim`; views `get_event`, `list_events`, `list_guests`, `get_guest_status`, `get_stats`, `recent_activity`, `get_next_event_id` |
+
+v2 adds event metadata (`description, category, location, cover, starts_ms, capacity`), capacity enforcement, global stats, and a bounded activity log of the last 60 actions. 7 unit tests pass (`cargo test --lib`).
 
 ### Edge cases covered (unit tests)
 
@@ -57,7 +86,7 @@ Vite + React. Connect wallet on the site, create an event, share `/e/:id`, guest
 
 ```sh
 cd web
-cp .env.example .env   # already points at pullup-970962.testnet
+cp .env.example .env   # point VITE_CONTRACT_ID at app.pullup-970962.testnet
 npm install
 npm run dev
 ```
@@ -71,13 +100,14 @@ Env:
 
 1. Open the live demo URL (or `cd web && npm run dev`).
 2. Click **Connect wallet** → Wallet Selector modal opens (MyNearWallet / Meteor / HOT / Intear). Connect a **testnet** account with a little NEAR (faucet: `near account create-account sponsor-by-faucet-service …`).
-3. **Create an event** → title + deposit (e.g. `0.1`) + hours → confirm in wallet (attaches `0.05 Ⓝ` storage) → land on `/e/<id>` with guest count `0`.
-4. From a second testnet wallet, open the same `/e/<id>` → **Deposit** → confirm exact deposit → a QR ticket appears.
-5. Host opens **Open scanner** → allow camera → scan guest QR → confirm `check_in` in host wallet → guest flips to **Pulled up** on the live list.
-6. Host clicks **Close & settle** → `payout_per_attendee` becomes `deposit + share of no-shows`.
-7. Attendee clicks **Claim** → NEAR arrives; explorer link shows the claim tx. A no-show cannot claim when someone checked in.
+3. Browse **Explore**, **Past events** and **Leaderboard** — all numbers are live contract reads.
+4. **Host an event** → title, category, location, cover, stake (e.g. `0.1`), start + check-in window → confirm in wallet (attaches `0.05 Ⓝ` storage) → land on `/e/<id>` with guest count `0`.
+5. From a second testnet wallet, open the same `/e/<id>` → **Deposit** → confirm exact deposit → a QR ticket appears.
+6. Host opens **Open door scanner** → allow camera → scan guest QR → confirm `check_in` in host wallet → guest flips to **Pulled up** on the live list.
+7. Host clicks **Close & settle** → `payout_per_attendee` becomes `deposit + share of no-shows`.
+8. Attendee clicks **Claim** → NEAR arrives; explorer link shows the claim tx. A no-show cannot claim when someone checked in.
 
-### Recorded testnet demo (3 guests, 2 check-in, 1 no-show)
+### Original v1 testnet demo (3 guests, 2 check-in, 1 no-show)
 
 Event `#1` on `pullup-970962.testnet`, deposit `0.1 Ⓝ`, title "Friday Rooftop".
 

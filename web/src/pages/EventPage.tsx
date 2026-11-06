@@ -1,30 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import {
-  callMethod,
-  getModal,
-  txUrl,
-  viewMethod,
-} from '../lib/near'
+import { callMethod, txUrl, viewMethod } from '../lib/near'
 import type { EventView, GuestStatus } from '../lib/near'
-import { shortAccount, yoctoToNear, ACCOUNT_EXPLORER } from '../lib/config'
-import { useAccount } from '../components/WalletButton'
+import { ACCOUNT_EXPLORER, shortAccount } from '../lib/config'
+import { useAccount, connect } from '../components/WalletButton'
+import { Cover } from '../components/Cover'
+import { Mascot } from '../components/Brand'
+import { Avatar, Countdown, PhaseBadge, fmtDate, useToast } from '../components/UI'
+import { fmtNear, nearNum, phaseOf } from '../lib/data'
+import { SEED_TXS } from '../lib/seedTxs'
 
-function ticketKey(eventId: string, account: string) {
-  return `pullup:ticket:${eventId}:${account}`
-}
-
-function statusPill(s: GuestStatus) {
-  if (s === 'CheckedIn') return <span className="pill">Pulled up</span>
-  if (s === 'Claimed') return <span className="pill muted">Claimed</span>
-  return <span className="pill warn">Deposited</span>
+export const ticketKey = (eventId: number | string, account: string) => `pullup:ticket:${eventId}:${account}`
+const STATUS: Record<GuestStatus, [string, string]> = {
+  Deposited: ['Staked', 'warn'],
+  CheckedIn: ['Pulled up', 'ok'],
+  Claimed: ['Paid out', 'ok'],
 }
 
 export function EventPage() {
   const { id } = useParams()
-  const account = useAccount()
   const eventId = Number(id)
+  const account = useAccount()
+  const toast = useToast()
   const [ev, setEv] = useState<EventView | null>(null)
   const [guests, setGuests] = useState<[string, GuestStatus][]>([])
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +31,6 @@ export function EventPage() {
   const [ticket, setTicket] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!Number.isFinite(eventId)) return
     const [e, g] = await Promise.all([
       viewMethod<EventView>('get_event', { event_id: eventId }),
       viewMethod<[string, GuestStatus][]>('list_guests', { event_id: eventId }),
@@ -44,197 +41,148 @@ export function EventPage() {
 
   useEffect(() => {
     load().catch((e) => setError(String(e)))
-    const t = setInterval(() => load().catch(() => {}), 8000)
+    const t = setInterval(() => load().catch(() => {}), 6000)
     return () => clearInterval(t)
   }, [load])
+  useEffect(() => { if (account) setTicket(localStorage.getItem(ticketKey(eventId, account))) }, [account, eventId])
 
-  useEffect(() => {
-    if (!account || !id) return
-    setTicket(localStorage.getItem(ticketKey(id, account)))
-  }, [account, id])
+  const mine = useMemo(() => (account ? guests.find(([a]) => a === account)?.[1] ?? null : null), [account, guests])
+  if (!ev)
+    return (
+      <div className="page">
+        {error ? <div className="error">Event not found. <Link to="/explore">Explore events</Link></div> : (
+          <div className="ev-skel"><div className="shimmer" style={{ height: 320, borderRadius: 24 }} /><div className="line shimmer" style={{ width: '60%', height: 32, marginTop: 24 }} /></div>
+        )}
+      </div>
+    )
 
-  const myStatus = useMemo(() => {
-    if (!account) return null
-    return guests.find(([a]) => a === account)?.[1] ?? null
-  }, [account, guests])
+  const phase = phaseOf(ev)
+  const isHost = account === ev.host
+  const rate = ev.guest_count ? Math.round((ev.checked_in_count / ev.guest_count) * 100) : 0
+  const projected = ev.checked_in_count ? nearNum(ev.deposit) * (ev.guest_count / ev.checked_in_count) : nearNum(ev.deposit)
+  const qr = ticket && account ? JSON.stringify({ e: eventId, g: account, t: ticket }) : null
+  const shareUrl = `${location.origin}/e/${eventId}`
+  const seed = SEED_TXS[eventId]
 
-  const isHost = account && ev && account === ev.host
-  const deadline = ev ? new Date(ev.check_in_deadline_ms) : null
-  const qrPayload = ticket && account && id
-    ? JSON.stringify({ e: Number(id), g: account, t: ticket })
-    : null
-
-  const run = async (fn: () => Promise<string>) => {
+  const run = async (label: string, fn: () => Promise<string>) => {
     setError(null)
-    if (!account) {
-      ;(await getModal()).show()
-      return
-    }
+    if (!account) return connect()
     setBusy(true)
     try {
-      const hash = await fn()
-      setLastTx(hash)
+      const h = await fn()
+      setLastTx(h)
+      toast(`${label} confirmed on NEAR`, 'ok')
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      const m = err instanceof Error ? err.message : String(err)
+      setError(m)
+      toast(m, 'err')
     } finally {
       setBusy(false)
     }
   }
-
   const onDeposit = () =>
-    run(async () => {
+    run('Deposit', async () => {
       const secret = crypto.randomUUID().replace(/-/g, '')
-      const hash = await callMethod(
-        'deposit',
-        { event_id: eventId, ticket: secret },
-        ev!.deposit,
-      )
-      localStorage.setItem(ticketKey(String(eventId), account!), secret)
+      localStorage.setItem(ticketKey(eventId, account!), secret)
       setTicket(secret)
-      return hash
+      return callMethod('deposit', { event_id: eventId, ticket: secret }, ev.deposit)
     })
-
-  const onClose = () => run(() => callMethod('close', { event_id: eventId }, '0'))
-  const onClaim = () => run(() => callMethod('claim', { event_id: eventId }, '0'))
-
-  if (!ev) {
-    return (
-      <div className="card">
-        {error ? <div className="error">{error}</div> : <p className="muted">Loading event…</p>}
-      </div>
-    )
+  const share = async () => {
+    if (navigator.share) await navigator.share({ title: ev.title, url: shareUrl }).catch(() => {})
+    else { await navigator.clipboard.writeText(shareUrl); toast('Link copied', 'ok') }
   }
 
   return (
-    <div>
-      <div className="row" style={{ marginBottom: 8 }}>
-        <span className="pill muted">Event #{ev.id}</span>
-        {ev.closed ? <span className="pill">Closed</span> : <span className="pill">Open</span>}
-      </div>
-      <h1>{ev.title}</h1>
-      <p className="lede">
-        Host{' '}
-        <a href={`${ACCOUNT_EXPLORER}/${ev.host}`} target="_blank" rel="noreferrer">
-          {shortAccount(ev.host)}
-        </a>
-        {' · '}
-        deposit <strong>{yoctoToNear(ev.deposit)} Ⓝ</strong>
-        {deadline && (
-          <>
-            {' · '}check-in until{' '}
-            {deadline.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
-          </>
-        )}
-      </p>
-
-      {error && <div className="error">{error}</div>}
-
-      <div className="stat-grid" style={{ marginBottom: 16 }}>
-        <div className="stat">
-          <div className="n">{ev.guest_count}</div>
-          <div className="l">Deposits</div>
-        </div>
-        <div className="stat">
-          <div className="n">{ev.checked_in_count}</div>
-          <div className="l">Pulled up</div>
-        </div>
-        <div className="stat">
-          <div className="n">{yoctoToNear(ev.total_pot)}</div>
-          <div className="l">Pot (Ⓝ)</div>
+    <div className="page ev">
+      <div className="ev-hero reveal">
+        <Cover kind={ev.cover || ev.title} className="ev-cover" />
+        <div className="ev-hero-over">
+          <PhaseBadge ev={ev} />
+          <span className="badge">{ev.category || 'Event'}</span>
         </div>
       </div>
-
-      <div className="card">
-        <h2>Your move</h2>
-        {!account && (
-          <button className="btn" type="button" onClick={async () => (await getModal()).show()}>
-            Connect wallet
-          </button>
-        )}
-        {account && !isHost && !myStatus && !ev.closed && (
-          <button className="btn" type="button" disabled={busy} onClick={onDeposit}>
-            {busy ? 'Confirm…' : `Deposit ${yoctoToNear(ev.deposit)} Ⓝ`}
-          </button>
-        )}
-        {account && myStatus === 'Deposited' && qrPayload && (
-          <div className="qr-wrap">
-            <QRCodeSVG value={qrPayload} size={200} level="M" includeMargin />
-            <p className="muted" style={{ textAlign: 'center', margin: 0 }}>
-              Show this at the door. Only the host can check you in.
-            </p>
+      <div className="ev-grid">
+        <div className="ev-main">
+          <h1 className="reveal">{ev.title}</h1>
+          <div className="ev-facts reveal">
+            <div><span>When</span><b>{fmtDate(ev.starts_ms)}</b></div>
+            <div><span>Where</span><b>{ev.location || 'TBA'}</b></div>
+            <div><span>Host</span><b><a href={`${ACCOUNT_EXPLORER}/${ev.host}`} target="_blank" rel="noreferrer">{shortAccount(ev.host)}</a></b></div>
+            <div><span>Check-in closes</span><b>{fmtDate(ev.check_in_deadline_ms)}</b></div>
           </div>
-        )}
-        {account && myStatus === 'CheckedIn' && !ev.closed && (
-          <p className="muted">You're in. Wait for the host to close, then claim.</p>
-        )}
-        {account && ev.closed && (myStatus === 'CheckedIn' || myStatus === 'Deposited') && (
-          <div className="stack">
-            <p className="muted" style={{ margin: 0 }}>
-              Payout:{' '}
-              <strong>
-                {yoctoToNear(
-                  myStatus === 'CheckedIn' || Number(ev.checked_in_count) === 0
-                    ? ev.payout_per_attendee
-                    : '0',
-                )}{' '}
-                Ⓝ
-              </strong>
-              {myStatus === 'Deposited' && Number(ev.checked_in_count) > 0 && (
-                <> — no-shows don't claim when someone pulled up.</>
-              )}
-            </p>
-            {(myStatus === 'CheckedIn' || Number(ev.checked_in_count) === 0) && (
-              <button className="btn" type="button" disabled={busy} onClick={onClaim}>
-                {busy ? 'Confirm…' : 'Claim'}
-              </button>
+          {ev.description && <p className="ev-desc reveal">{ev.description}</p>}
+
+          <div className="card reveal">
+            <div className="card-head">
+              <h3>Who’s pulling up <span className="muted">· {ev.guest_count}{ev.capacity ? `/${ev.capacity}` : ''}</span></h3>
+              <span className="live-dot"><i className="pulse" /> live</span>
+            </div>
+            <div className="bar big"><i style={{ width: `${rate}%` }} /></div>
+            <div className="muted small">{ev.checked_in_count} checked in · {ev.guest_count - ev.checked_in_count} {ev.closed ? 'flaked' : 'yet to arrive'}</div>
+            <ul className="guests">
+              {guests.map(([g, s]) => (
+                <li key={g} className={g === account ? 'me' : ''}>
+                  <Avatar id={g} />
+                  <a href={`${ACCOUNT_EXPLORER}/${g}`} target="_blank" rel="noreferrer">{shortAccount(g)}</a>
+                  {g === account && <span className="badge">you</span>}
+                  <span className={`status status-${STATUS[s][1]}`}>{STATUS[s][0]}</span>
+                </li>
+              ))}
+              {!guests.length && <li className="muted">No RSVPs yet. Be the first.</li>}
+            </ul>
+          </div>
+          {seed && (
+            <div className="card reveal">
+              <h3>On-chain receipts</h3>
+              <div className="receipts">
+                {seed.map(([k, h]) => <a key={h} href={txUrl(h)} target="_blank" rel="noreferrer" className="receipt"><span>{k}</span><code>{h.slice(0, 10)}…</code></a>)}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <aside className="ev-side">
+          <div className="card sticky reveal">
+            <div className="stake">
+              <span className="muted small">Stake to RSVP</span>
+              <b>{fmtNear(ev.deposit, 4)}</b>
+            </div>
+            {phase === 'upcoming' && <div className="cd">Starts in <Countdown to={ev.starts_ms} /></div>}
+            {phase === 'live' && <div className="cd live">Doors close in <Countdown to={ev.check_in_deadline_ms} /></div>}
+            {!ev.closed && <div className="muted small">If everyone checked in now, you’d get back <b>{projected.toFixed(3)} NEAR</b>.</div>}
+            {ev.closed && <div className="result"><span>Each attendee received</span><b>{fmtNear(ev.payout_per_attendee, 4)}</b><span className="muted small">{rate}% show-up rate{ev.refund_mode ? ' · refund mode' : ''}</span></div>}
+
+            {!mine && !isHost && !ev.closed && phase !== 'settling' && (
+              <button className="btn btn-lg w100" disabled={busy} onClick={onDeposit}>{busy ? 'Confirm in wallet…' : account ? `Stake ${fmtNear(ev.deposit, 4)} & RSVP` : 'Connect wallet to RSVP'}</button>
             )}
-          </div>
-        )}
-        {myStatus === 'Claimed' && <p className="muted">Already claimed. Nice.</p>}
-        {isHost && (
-          <div className="row" style={{ marginTop: 12 }}>
-            <Link className="btn ghost" to={`/e/${ev.id}/scan`}>
-              Open scanner
-            </Link>
-            {!ev.closed && (
-              <button className="btn secondary" type="button" disabled={busy} onClick={onClose}>
-                Close & settle
-              </button>
+            {mine && qr && mine === 'Deposited' && (
+              <div className="qr-ticket">
+                <div className="qr-wrap"><QRCodeSVG value={qr} size={188} bgColor="#ffffff" fgColor="#14132A" level="M" /></div>
+                <div className="mono small">YOUR TICKET · show at the door</div>
+              </div>
             )}
+            {mine === 'Deposited' && !qr && <p className="muted small">You’re in. Your QR lives on the device you RSVP’d from.</p>}
+            {mine === 'CheckedIn' && !ev.closed && <div className="okbox"><Mascot size={54} mood="cheer" /> You pulled up! Claim opens when the host closes.</div>}
+            {ev.closed && mine && mine !== 'Claimed' && (mine === 'CheckedIn' || ev.refund_mode) && (
+              <button className="btn btn-lg w100" disabled={busy} onClick={() => run('Claim', () => callMethod('claim', { event_id: eventId }))}>Claim {fmtNear(ev.payout_per_attendee, 4)}</button>
+            )}
+            {mine === 'Claimed' && <div className="okbox">✓ Paid out. Never flake.</div>}
+            {isHost && !ev.closed && (
+              <div className="host-tools">
+                <Link className="btn w100" to={`/e/${eventId}/scan`}>Open door scanner</Link>
+                <button className="btn btn-ghost w100" disabled={busy} onClick={() => run('Close', () => callMethod('close', { event_id: eventId }))}>Close & settle</button>
+              </div>
+            )}
+            {!isHost && phase === 'settling' && (
+              <button className="btn btn-ghost w100" disabled={busy} onClick={() => run('Close', () => callMethod('close', { event_id: eventId }))}>Settle event (anyone can)</button>
+            )}
+            <button className="btn btn-ghost w100" onClick={share}>Share event ↗</button>
+            {lastTx && <a className="small" href={txUrl(lastTx)} target="_blank" rel="noreferrer">Last tx {lastTx.slice(0, 10)}… ↗</a>}
+            {error && <div className="error small">{error}</div>}
           </div>
-        )}
-        {lastTx && (
-          <p className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
-            Last tx:{' '}
-            <a href={txUrl(lastTx)} target="_blank" rel="noreferrer">
-              {lastTx.slice(0, 14)}…
-            </a>
-          </p>
-        )}
+        </aside>
       </div>
-
-      <div className="card">
-        <h2>Guest list</h2>
-        {guests.length === 0 ? (
-          <p className="muted">Nobody yet. Share this page.</p>
-        ) : (
-          <ul className="guest-list">
-            {guests.map(([g, s]) => (
-              <li key={g}>
-                <span className="mono">{shortAccount(g)}</span>
-                {statusPill(s)}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {ev.closed && (
-        <p className="muted" style={{ fontSize: '0.85rem' }}>
-          Settled payout per attendee: {yoctoToNear(ev.payout_per_attendee)} Ⓝ
-        </p>
-      )}
     </div>
   )
 }

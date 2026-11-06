@@ -1,8 +1,8 @@
-export const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || 'pullup-970962.testnet'
+export const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || 'app.pullup-970962.testnet'
 export const NETWORK_ID = (import.meta.env.VITE_NETWORK_ID || 'testnet') as 'testnet' | 'mainnet'
 export const NODE_URL =
   import.meta.env.VITE_NODE_URL ||
-  (NETWORK_ID === 'mainnet' ? 'https://rpc.mainnet.near.org' : 'https://rpc.testnet.near.org')
+  (NETWORK_ID === 'mainnet' ? 'https://rpc.mainnet.near.org' : 'https://test.rpc.fastnear.com')
 export const WALLET_URL =
   NETWORK_ID === 'mainnet' ? 'https://app.mynearwallet.com' : 'https://testnet.mynearwallet.com'
 export const HELPER_URL =
@@ -38,6 +38,6 @@ export function yoctoToNear(yocto: string | number): string {
 }
 
 export function shortAccount(id: string): string {
-  if (id.length <= 22) return id
+  if (id.length <= 28) return id
   return `${id.slice(0, 10)}…${id.slice(-8)}`
 }

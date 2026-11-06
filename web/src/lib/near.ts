@@ -40,20 +40,37 @@ export function getProvider() {
   return new providers.JsonRpcProvider({ url: NODE_URL })
 }
 
+const RPCS = [NODE_URL, 'https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org', 'https://neart.lava.build']
+const providerCache: Record<string, providers.JsonRpcProvider> = {}
+let rpcIdx = 0
+
 export async function viewMethod<T = unknown>(
   method: string,
   args: Record<string, unknown> = {},
 ): Promise<T> {
-  const provider = getProvider()
-  const res = await provider.query({
-    request_type: 'call_function',
-    account_id: CONTRACT_ID,
-    method_name: method,
-    args_base64: Buffer.from(JSON.stringify(args)).toString('base64'),
-    finality: 'optimistic',
-  })
-  const result = (res as unknown as { result: number[] }).result
-  return JSON.parse(Buffer.from(result).toString()) as T
+  let lastErr: unknown
+  for (let attempt = 0; attempt < RPCS.length * 2; attempt++) {
+    const url = RPCS[(rpcIdx + attempt) % RPCS.length]
+    try {
+      const provider = (providerCache[url] ||= new providers.JsonRpcProvider({ url }))
+      const res = await provider.query({
+        request_type: 'call_function',
+        account_id: CONTRACT_ID,
+        method_name: method,
+        args_base64: Buffer.from(JSON.stringify(args)).toString('base64'),
+        finality: 'optimistic',
+      })
+      rpcIdx = (rpcIdx + attempt) % RPCS.length
+      const result = (res as unknown as { result: number[] }).result
+      return JSON.parse(Buffer.from(result).toString()) as T
+    } catch (e) {
+      lastErr = e
+      const m = String(e)
+      if (/event not found|panicked|Smart contract/i.test(m)) throw e
+      await new Promise((r) => setTimeout(r, 250 * (attempt + 1)))
+    }
+  }
+  throw lastErr
 }
 
 export async function callMethod(
@@ -105,4 +122,21 @@ export type EventView = {
   claimed_count: number
   payout_per_attendee: string
   total_pot: string
+  description: string
+  category: string
+  location: string
+  cover: string
+  starts_ms: number
+  capacity: number
+  refund_mode: boolean
+  created_ms: number
+}
+
+export type Activity = { kind: string; event_id: number; account: string; ts_ms: number }
+export type Stats = {
+  events: number
+  total_staked: string
+  total_paid_out: string
+  deposits: number
+  check_ins: number
 }

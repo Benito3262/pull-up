@@ -1,99 +1,92 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { callMethod, parseNear, txUrl, viewMethod } from '../lib/near'
-import { nearToYocto } from '../lib/config'
-import { useAccount } from '../components/WalletButton'
-import { getModal } from '../lib/near'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { callMethod, parseNear, viewMethod } from '../lib/near'
+import { Cover, COVERS } from '../components/Cover'
+import { PageHead, useToast } from '../components/UI'
+import { useAccount, connect } from '../components/WalletButton'
+import { TEMPLATES } from './Ideas'
+
+const CATS = ['Meetup', 'Workshop', 'Watch party', 'Fitness', 'Study group', 'Co-working', 'Social', 'Other']
+const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
 
 export function Create() {
   const account = useAccount()
   const nav = useNavigate()
-  const [title, setTitle] = useState('')
-  const [depositNear, setDepositNear] = useState('0.1')
-  const [hours, setHours] = useState('2')
+  const toast = useToast()
+  const [sp] = useSearchParams()
+  const tpl = TEMPLATES.find((t) => t.id === sp.get('t'))
+  const [f, setF] = useState({
+    title: tpl?.title || '', description: tpl?.description || '', category: tpl?.category || 'Meetup', location: '',
+    cover: tpl?.cover || 'sunrise', deposit: tpl?.deposit || '0.1', capacity: '30',
+    starts: local(new Date(Date.now() + 86400000)), hours: '3',
+  })
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [tx, setTx] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  useEffect(() => { if (tpl) toast(`Template loaded: ${tpl.title}`, 'info') }, [tpl, toast])
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
 
-  const onSubmit = async (e: FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    if (!account) {
-      ;(await getModal()).show()
-      return
-    }
-    setBusy(true)
+    if (!account) return connect()
+    setBusy(true); setErr(null)
     try {
-      const deadline = Date.now() + Math.max(0.05, parseFloat(hours)) * 3600_000
-      const deposit = nearToYocto(depositNear)
-      const hash = await callMethod(
-        'create_event',
-        {
-          title: title.trim(),
-          deposit,
-          check_in_deadline_ms: Math.floor(deadline),
-        },
-        parseNear('0.05'),
-      )
-      setTx(hash)
-      // next id is unknown without view; poll get_next_event_id - 1
-      const next = await viewMethod<number>('get_next_event_id', {})
-      const id = next - 1
-      nav(`/e/${id}`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setBusy(false)
-    }
+      const starts = new Date(f.starts).getTime()
+      const deadline = starts + Number(f.hours) * 3600000
+      const next = await viewMethod<number>('get_next_event_id')
+      await callMethod('create_event', {
+        title: f.title.trim(), deposit: parseNear(f.deposit), check_in_deadline_ms: deadline,
+        meta: { description: f.description, category: f.category, location: f.location, cover: f.cover, starts_ms: starts, capacity: Number(f.capacity) || 0 },
+      }, parseNear('0.05'), '100000000000000')
+      toast('Event created on NEAR', 'ok')
+      nav(`/e/${next}`)
+    } catch (x) {
+      setErr(x instanceof Error ? x.message : String(x))
+    } finally { setBusy(false) }
   }
 
   return (
-    <div>
-      <h1>New event</h1>
-      <p className="lede">Set the stake. Share the link. Scan at the door.</p>
-      <form className="card" onSubmit={onSubmit}>
-        {error && <div className="error">{error}</div>}
-        <label htmlFor="title">Title</label>
-        <input
-          id="title"
-          required
-          maxLength={120}
-          placeholder="Friday rooftop"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label htmlFor="deposit">Deposit (NEAR)</label>
-        <input
-          id="deposit"
-          required
-          inputMode="decimal"
-          min="0.01"
-          step="0.01"
-          value={depositNear}
-          onChange={(e) => setDepositNear(e.target.value)}
-        />
-        <label htmlFor="hours">Check-in open for (hours)</label>
-        <input
-          id="hours"
-          required
-          inputMode="decimal"
-          min="0.05"
-          step="0.05"
-          value={hours}
-          onChange={(e) => setHours(e.target.value)}
-        />
-        <p className="muted" style={{ fontSize: '0.85rem' }}>
-          Host attaches 0.05 Ⓝ for storage. Guests must deposit the exact amount.
-        </p>
-        <button className="btn" type="submit" disabled={busy}>
-          {busy ? 'Confirm in wallet…' : account ? 'Create event' : 'Connect to create'}
-        </button>
-        {tx && (
-          <p className="muted" style={{ marginTop: 12 }}>
-            Tx: <a href={txUrl(tx)} target="_blank" rel="noreferrer">{tx.slice(0, 12)}…</a>
-          </p>
-        )}
-      </form>
+    <div className="page">
+      <PageHead eyebrow="Host" title="Host an event" sub="Set a small stake. Guests who show up split whatever the no-shows leave behind. You never touch the pot." />
+      <div className="create">
+        <form className="card form reveal" onSubmit={submit}>
+          <label>Event name<input className="input" required maxLength={120} value={f.title} onChange={set('title')} placeholder="Sunday Run Club" /></label>
+          <label>Description<textarea className="input" rows={3} maxLength={1000} value={f.description} onChange={set('description')} placeholder="What should people expect?" /></label>
+          <div className="two">
+            <label>Category<select className="input" value={f.category} onChange={set('category')}>{CATS.map((c) => <option key={c}>{c}</option>)}</select></label>
+            <label>Location<input className="input" maxLength={120} value={f.location} onChange={set('location')} placeholder="City · venue, or Online" /></label>
+          </div>
+          <div className="two">
+            <label>Starts<input className="input" type="datetime-local" value={f.starts} onChange={set('starts')} /></label>
+            <label>Check-in window (hours)<input className="input" type="number" min="1" max="72" value={f.hours} onChange={set('hours')} /></label>
+          </div>
+          <div className="two">
+            <label>Stake per guest ( NEAR)<input className="input" type="number" step="0.01" min="0.01" value={f.deposit} onChange={set('deposit')} /></label>
+            <label>Capacity (0 = unlimited)<input className="input" type="number" min="0" value={f.capacity} onChange={set('capacity')} /></label>
+          </div>
+          <div>
+            <div className="lbl">Cover</div>
+            <div className="cover-pick">
+              {COVERS.map((c) => (
+                <button type="button" key={c} className={f.cover === c ? 'on' : ''} onClick={() => setF({ ...f, cover: c })} aria-label={c}><Cover kind={c} /></button>
+              ))}
+            </div>
+          </div>
+          <button className="btn btn-lg w100" disabled={busy}>{busy ? 'Confirm in wallet…' : account ? 'Create event (0.05 NEAR storage)' : 'Connect wallet to create'}</button>
+          {err && <div className="error">{err}</div>}
+        </form>
+        <div className="preview reveal">
+          <div className="lbl">Live preview</div>
+          <div className="ecard static">
+            <div className="ecard-cover"><Cover kind={f.cover} /><span className="badge badge-upcoming">Upcoming</span><span className="ecard-dep">{f.deposit || '0'} NEAR stake</span></div>
+            <div className="ecard-body">
+              <div className="ecard-cat">{f.category} · {f.location || 'Location'}</div>
+              <h3>{f.title || 'Your event name'}</h3>
+              <div className="ecard-meta">{new Date(f.starts).toLocaleString()}</div>
+            </div>
+          </div>
+          <div className="card tip"><b>Tip:</b> 0.05–0.25 NEAR is the sweet spot: enough to make people commit, small enough that nobody hesitates.</div>
+        </div>
+      </div>
     </div>
   )
 }

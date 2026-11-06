@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Html5Qrcode } from 'html5-qrcode'
 import { callMethod, getModal, txUrl, viewMethod } from '../lib/near'
+import { useToast } from '../components/UI'
 import type { EventView } from '../lib/near'
 import { useAccount } from '../components/WalletButton'
 
@@ -18,6 +19,12 @@ export function Scan() {
   const [busy, setBusy] = useState(false)
   const scanning = useRef(false)
   const lastCode = useRef('')
+  const toast = useToast()
+  const [guests, setGuests] = useState<[string, string][]>([])
+  useEffect(() => {
+    const l = () => viewMethod<[string, string][]>('list_guests', { event_id: eventId }).then(setGuests).catch(() => {})
+    l(); const t = setInterval(l, 5000); return () => clearInterval(t)
+  }, [eventId])
 
   useEffect(() => {
     viewMethod<EventView>('get_event', { event_id: eventId })
@@ -51,6 +58,7 @@ export function Scan() {
             )
             setTx(hash)
             setMsg(`Checked in ${data.g}`)
+            toast(`✓ ${data.g} pulled up`, 'ok')
           } catch (err) {
             setError(err instanceof Error ? err.message : String(err))
           } finally {
@@ -84,16 +92,18 @@ export function Scan() {
   }
 
   return (
-    <div>
+    <div className="page scan">
+      <div className="eyebrow">Host · Event #{eventId}</div>
       <h1>Door scanner</h1>
+      {ev && <p className="muted">{ev.title} · {guests.filter(([, s]) => s !== 'Deposited').length}/{guests.length} checked in</p>}
       <p className="lede">Point at a guest QR. Check-in is an on-chain call from your wallet.</p>
       {!account && (
-        <button className="btn" type="button" onClick={async () => (await getModal()).show()}>
+        <button className="btn btn-lg" type="button" onClick={async () => (await getModal()).show()}>
           Connect host wallet
         </button>
       )}
       {error && <div className="error">{error}</div>}
-      {msg && <p className="pill">{msg}</p>}
+      {msg && <p className="okbox">{msg}</p>}
       {busy && <p className="muted">Confirm check-in in your wallet…</p>}
       <div className="card">
         <div id="pullup-qr-reader" className="scanner" />
@@ -106,6 +116,7 @@ export function Scan() {
           </a>
         </p>
       )}
+      <ul className="guests">{guests.map(([g, s]) => <li key={g}>{g}<span className={`status status-${s === 'Deposited' ? 'warn' : 'ok'}`}>{s === 'Deposited' ? 'Waiting' : 'In'}</span></li>)}</ul>
       <Link to={`/e/${eventId}`}>← Event</Link>
     </div>
   )

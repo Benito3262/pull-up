@@ -2,7 +2,7 @@
 #![allow(clippy::needless_pass_by_value)]
 
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
-use near_sdk::collections::UnorderedMap;
+use near_sdk::collections::{UnorderedMap, Vector};
 use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
@@ -35,6 +35,45 @@ pub struct EventView {
     pub claimed_count: u32,
     pub payout_per_attendee: U128,
     pub total_pot: U128,
+    pub description: String,
+    pub category: String,
+    pub location: String,
+    pub cover: String,
+    pub starts_ms: u64,
+    pub capacity: u32,
+    pub refund_mode: bool,
+    pub created_ms: u64,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Activity {
+    pub kind: String,
+    pub event_id: u64,
+    pub account: AccountId,
+    pub ts_ms: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Stats {
+    pub events: u64,
+    pub total_staked: U128,
+    pub total_paid_out: U128,
+    pub deposits: u64,
+    pub check_ins: u64,
+}
+
+/// Optional metadata for an event (all strings bounded).
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(crate = "near_sdk::serde")]
+pub struct EventMeta {
+    pub description: String,
+    pub category: String,
+    pub location: String,
+    pub cover: String,
+    pub starts_ms: u64,
+    pub capacity: u32,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
@@ -55,13 +94,27 @@ pub struct Event {
     pub remainder_to_host: u128,
     /// when nobody checked in, each depositor can reclaim their deposit
     pub refund_mode: bool,
+    pub description: String,
+    pub category: String,
+    pub location: String,
+    pub cover: String,
+    pub starts_ms: u64,
+    pub capacity: u32,
+    pub created_ms: u64,
 }
+
+const MAX_ACTIVITY: u64 = 60;
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
 pub struct PullUp {
     pub events: UnorderedMap<u64, Event>,
     pub next_event_id: u64,
+    pub activity: Vector<Activity>,
+    pub total_staked: u128,
+    pub total_paid_out: u128,
+    pub deposits: u64,
+    pub check_ins: u64,
 }
 
 #[near]
@@ -71,6 +124,11 @@ impl PullUp {
         Self {
             events: UnorderedMap::new(b"e"),
             next_event_id: 1,
+            activity: Vector::new(b"a"),
+            total_staked: 0,
+            total_paid_out: 0,
+            deposits: 0,
+            check_ins: 0,
         }
     }
 
@@ -81,8 +139,15 @@ impl PullUp {
         title: String,
         deposit: U128,
         check_in_deadline_ms: u64,
+        meta: Option<EventMeta>,
     ) -> u64 {
         require!(!title.is_empty() && title.len() <= 120, "bad title");
+        let meta = meta.unwrap_or_default();
+        require!(meta.description.len() <= 1000, "description too long");
+        require!(
+            meta.category.len() <= 40 && meta.location.len() <= 120 && meta.cover.len() <= 200,
+            "meta too long"
+        );
         require!(deposit.0 >= YOCTO_PER_NEAR / 100, "deposit too small (min 0.01 N)");
         require!(
             check_in_deadline_ms > env::block_timestamp_ms(),
@@ -109,8 +174,16 @@ impl PullUp {
             payout_per_attendee: 0,
             remainder_to_host: 0,
             refund_mode: false,
+            description: meta.description,
+            category: meta.category,
+            location: meta.location,
+            cover: meta.cover,
+            starts_ms: if meta.starts_ms == 0 { check_in_deadline_ms } else { meta.starts_ms },
+            capacity: meta.capacity,
+            created_ms: env::block_timestamp_ms(),
         };
         self.events.insert(&id, &event);
+        self.log("create", id, env::predecessor_account_id());
         id
     }
 
@@ -133,6 +206,7 @@ impl PullUp {
         let guest = env::predecessor_account_id();
         require!(guest != event.host, "host cannot deposit");
         require!(event.guests.get(&guest).is_none(), "already deposited");
+        require!(event.capacity == 0 || event.guest_count < event.capacity, "event full");
 
         // Store ticket hash under a parallel key space: t{event_id}/{guest}
         let hash = env::sha256(ticket.as_bytes());
@@ -141,6 +215,9 @@ impl PullUp {
         event.guests.insert(&guest, &GuestStatus::Deposited);
         event.guest_count += 1;
         self.events.insert(&event_id, &event);
+        self.total_staked += event.deposit;
+        self.deposits += 1;
+        self.log("deposit", event_id, guest);
     }
 
     /// Host checks a guest in by providing the guest account and the ticket secret from their QR.
@@ -169,6 +246,8 @@ impl PullUp {
         event.guests.insert(&guest, &GuestStatus::CheckedIn);
         event.checked_in_count += 1;
         self.events.insert(&event_id, &event);
+        self.check_ins += 1;
+        self.log("check_in", event_id, guest);
     }
 
     /// Close the event after the check-in deadline. Anyone may call.
@@ -184,6 +263,7 @@ impl PullUp {
         );
 
         event.closed = true;
+        self.log("close", event_id, env::predecessor_account_id());
         let attendees = event.checked_in_count as u128;
 
         if attendees == 0 {
@@ -236,6 +316,8 @@ impl PullUp {
         event.guests.insert(&guest, &GuestStatus::Claimed);
         event.claimed_count += 1;
         self.events.insert(&event_id, &event);
+        self.total_paid_out += payout;
+        self.log("claim", event_id, guest.clone());
 
         Promise::new(guest).transfer(NearToken::from_yoctonear(payout))
     }
@@ -256,6 +338,42 @@ impl PullUp {
             claimed_count: e.claimed_count,
             payout_per_attendee: U128(e.payout_per_attendee),
             total_pot: U128(e.guest_count as u128 * e.deposit),
+            description: e.description,
+            category: e.category,
+            location: e.location,
+            cover: e.cover,
+            starts_ms: e.starts_ms,
+            capacity: e.capacity,
+            refund_mode: e.refund_mode,
+            created_ms: e.created_ms,
+        }
+    }
+
+    /// Paginated list of events, newest id first when `newest_first`.
+    pub fn list_events(&self, from_index: Option<u64>, limit: Option<u64>) -> Vec<EventView> {
+        let from = from_index.unwrap_or(1).max(1);
+        let limit = limit.unwrap_or(50).min(100);
+        (from..self.next_event_id)
+            .take(limit as usize)
+            .filter(|id| self.events.get(id).is_some())
+            .map(|id| self.get_event(id))
+            .collect()
+    }
+
+    /// Most recent activity first.
+    pub fn recent_activity(&self, limit: Option<u64>) -> Vec<Activity> {
+        let n = self.activity.len();
+        let limit = limit.unwrap_or(20).min(MAX_ACTIVITY);
+        (0..n.min(limit)).filter_map(|i| self.activity.get(n - 1 - i)).collect()
+    }
+
+    pub fn get_stats(&self) -> Stats {
+        Stats {
+            events: self.next_event_id - 1,
+            total_staked: U128(self.total_staked),
+            total_paid_out: U128(self.total_paid_out),
+            deposits: self.deposits,
+            check_ins: self.check_ins,
         }
     }
 
@@ -274,6 +392,21 @@ impl PullUp {
 }
 
 impl PullUp {
+    fn log(&mut self, kind: &str, event_id: u64, account: AccountId) {
+        let a = Activity { kind: kind.to_string(), event_id, account, ts_ms: env::block_timestamp_ms() };
+        if self.activity.len() < MAX_ACTIVITY {
+            self.activity.push(&a);
+        } else {
+            // ring buffer: shift left by one (bounded, small)
+            for i in 1..self.activity.len() {
+                let v = self.activity.get(i).unwrap();
+                self.activity.replace(i - 1, &v);
+            }
+            let last = self.activity.len() - 1;
+            self.activity.replace(last, &a);
+        }
+    }
+
     fn load_event(&self, event_id: u64) -> Event {
         self.events
             .get(&event_id)
@@ -318,7 +451,7 @@ mod unit_tests {
         let deadline = 10_000u64;
 
         testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
-        let id = c.create_event("Rooftop".into(), U128(deposit), deadline);
+        let id = c.create_event("Rooftop".into(), U128(deposit), deadline, None);
         assert_eq!(id, 1);
 
         for (g, ticket) in [(&g1, "alpha"), (&g2, "bravo"), (&g3, "charlie")] {
@@ -356,7 +489,7 @@ mod unit_tests {
         let deposit = YOCTO_PER_NEAR;
         let deadline = 10_000u64;
         testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
-        let id = c.create_event("Solo".into(), U128(deposit), deadline);
+        let id = c.create_event("Solo".into(), U128(deposit), deadline, None);
         testing_env!(ctx(g1.clone(), deposit, 2_000).build());
         c.deposit(id, "t".into());
         testing_env!(ctx(host.clone(), 0, 3_000).build());
@@ -374,7 +507,7 @@ mod unit_tests {
         let deposit = YOCTO_PER_NEAR;
         let deadline = 10_000u64;
         testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
-        let id = c.create_event("Ghost".into(), U128(deposit), deadline);
+        let id = c.create_event("Ghost".into(), U128(deposit), deadline, None);
         testing_env!(ctx(g1.clone(), deposit, 2_000).build());
         c.deposit(id, "a".into());
         testing_env!(ctx(g2.clone(), deposit, 2_000).build());
@@ -396,7 +529,7 @@ mod unit_tests {
         let deposit = YOCTO_PER_NEAR;
         let deadline = 10_000u64;
         testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
-        let id = c.create_event("Full".into(), U128(deposit), deadline);
+        let id = c.create_event("Full".into(), U128(deposit), deadline, None);
         testing_env!(ctx(g1.clone(), deposit, 2_000).build());
         c.deposit(id, "a".into());
         testing_env!(ctx(g2.clone(), deposit, 2_000).build());
@@ -407,6 +540,38 @@ mod unit_tests {
         testing_env!(ctx(host.clone(), 0, deadline + 1).build());
         let _ = c.close(id);
         assert_eq!(c.get_event(id).payout_per_attendee.0, deposit);
+    }
+
+    #[test]
+    fn meta_list_stats_activity() {
+        let (mut c, host, g1, g2, _) = setup();
+        let deposit = YOCTO_PER_NEAR;
+        testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
+        let meta = EventMeta { description: "d".into(), category: "Meetup".into(), location: "Roof".into(), cover: "sunset".into(), starts_ms: 9_000, capacity: 1 };
+        let id = c.create_event("Meta".into(), U128(deposit), 10_000, Some(meta));
+        testing_env!(ctx(g1.clone(), deposit, 2_000).build());
+        c.deposit(id, "a".into());
+        let e = c.get_event(id);
+        assert_eq!(e.category, "Meetup");
+        assert_eq!(e.capacity, 1);
+        assert_eq!(c.list_events(None, None).len(), 1);
+        assert_eq!(c.get_stats().deposits, 1);
+        assert_eq!(c.recent_activity(None)[0].kind, "deposit");
+        let _ = g2;
+    }
+
+    #[test]
+    #[should_panic(expected = "event full")]
+    fn capacity_enforced() {
+        let (mut c, host, g1, g2, _) = setup();
+        let deposit = YOCTO_PER_NEAR;
+        testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
+        let meta = EventMeta { capacity: 1, ..Default::default() };
+        let id = c.create_event("Cap".into(), U128(deposit), 10_000, Some(meta));
+        testing_env!(ctx(g1.clone(), deposit, 2_000).build());
+        c.deposit(id, "a".into());
+        testing_env!(ctx(g2.clone(), deposit, 2_000).build());
+        c.deposit(id, "b".into());
     }
 
     #[test]
@@ -423,7 +588,7 @@ mod unit_tests {
         // 10^24 % 3 = 1 yes.
         let deposit = YOCTO_PER_NEAR;
         testing_env!(ctx(host.clone(), MIN_STORAGE_DEPOSIT.as_yoctonear(), 1_000).build());
-        let id = c.create_event("Dust".into(), U128(deposit), deadline);
+        let id = c.create_event("Dust".into(), U128(deposit), deadline, None);
         for (g, t) in [(&g1, "a"), (&g2, "b"), (&g3, "c")] {
             // need a 4th for rem with 3 attendees... 1 no-show among 4 guests, 3 in
             let _ = (g, t);
