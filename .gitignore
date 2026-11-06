@@ -1,0 +1,17 @@
+node_modules/
+dist/
+target/
+.near-credentials/
+.env
+.env.local
+.DS_Store
+web/dist/
+contract/target/
+demo-txs.txt
+.account-suffix
+*.swp
+.vercel
+contract/target/
+web/node_modules/
+contract/Cargo.lock.bak
+.secrets/
