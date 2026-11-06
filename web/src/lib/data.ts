@@ -110,9 +110,12 @@ export function fmtNear(yocto: string, dp = 2) {
 /** Titles / categories from automated tests — hide from public lists. */
 const HIDDEN_TITLE = /^(E2E\d*\b|UI Test\b)/i
 const HIDDEN_CATEGORY = /^E2E(\s+test)?$/i
+/** Abandoned / superseded events (e.g. #19 closed with refunds before anyone attended). */
+const HIDDEN_IDS = new Set<number>([19])
 
 /** True for seeded / real events that should appear on the public site. */
-export function isPublicEvent(e: { title: string; category?: string; guest_count?: number; closed?: boolean; starts_ms?: number }): boolean {
+export function isPublicEvent(e: { id?: number; title: string; category?: string; guest_count?: number; closed?: boolean; starts_ms?: number }): boolean {
+  if (e.id !== undefined && HIDDEN_IDS.has(e.id)) return false
   if (HIDDEN_TITLE.test(e.title.trim())) return false
   if (e.category && HIDDEN_CATEGORY.test(e.category.trim())) return false
   // Abandoned: closed with zero guests (never used)
@@ -120,7 +123,7 @@ export function isPublicEvent(e: { title: string; category?: string; guest_count
   return true
 }
 
-export function filterPublicEvents<T extends { title: string; category?: string; guest_count?: number; closed?: boolean }>(events: T[] | null | undefined): T[] {
+export function filterPublicEvents<T extends { id?: number; title: string; category?: string; guest_count?: number; closed?: boolean }>(events: T[] | null | undefined): T[] {
   return (events || []).filter(isPublicEvent)
 }
 
