@@ -106,3 +106,35 @@ export function fmtNear(yocto: string, dp = 2) {
   const n = nearNum(yocto)
   return `${n.toLocaleString(undefined, { maximumFractionDigits: dp })} NEAR`
 }
+
+/** Titles / categories from automated tests — hide from public lists. */
+const HIDDEN_TITLE = /^(E2E\d*\b|UI Test\b)/i
+const HIDDEN_CATEGORY = /^E2E(\s+test)?$/i
+
+/** True for seeded / real events that should appear on the public site. */
+export function isPublicEvent(e: { title: string; category?: string; guest_count?: number; closed?: boolean; starts_ms?: number }): boolean {
+  if (HIDDEN_TITLE.test(e.title.trim())) return false
+  if (e.category && HIDDEN_CATEGORY.test(e.category.trim())) return false
+  // Abandoned: closed with zero guests (never used)
+  if (e.closed && (e.guest_count ?? 0) === 0) return false
+  return true
+}
+
+export function filterPublicEvents<T extends { title: string; category?: string; guest_count?: number; closed?: boolean }>(events: T[] | null | undefined): T[] {
+  return (events || []).filter(isPublicEvent)
+}
+
+/** Parse a datetime-local value as local wall-clock milliseconds (no TZ shift). */
+export function parseLocalDateTime(v: string): number {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v)
+  if (!m) return NaN
+  const [, ys, mos, ds, hs, mis] = m
+  return new Date(+ys, +mos - 1, +ds, +hs, +mis).getTime()
+}
+
+/** Format a datetime-local value for the create preview. */
+export function formatLocalDateTime(v: string): string {
+  const ms = parseLocalDateTime(v)
+  if (!Number.isFinite(ms)) return v
+  return fmtDate(ms)
+}

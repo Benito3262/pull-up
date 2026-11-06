@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Mascot } from '../components/Brand'
 import { Avatar, PageHead } from '../components/UI'
-import { fetchAllGuests, useEvents } from '../lib/data'
+import { fetchAllGuests, filterPublicEvents, useEvents } from '../lib/data'
 import { ACCOUNT_EXPLORER, shortAccount } from '../lib/config'
 
 type Row = { id: string; rsvps: number; came: number; flaked: number; streak: number }
@@ -11,11 +11,12 @@ export function Leaderboard() {
   const [rows, setRows] = useState<Row[] | null>(null)
   useEffect(() => {
     if (!events) return
-    const settled = events.filter((e) => e.closed).sort((a, b) => a.id - b.id)
-    fetchAllGuests(events).then((all) => {
+    const pub = filterPublicEvents(events)
+    const settled = pub.filter((e) => e.closed).sort((a, b) => a.id - b.id)
+    fetchAllGuests(pub).then((all) => {
       const m: Record<string, Row> = {}
       const get = (id: string) => (m[id] ||= { id, rsvps: 0, came: 0, flaked: 0, streak: 0 })
-      for (const e of events) for (const [g, s] of all[e.id] || []) {
+      for (const e of pub) for (const [g, s] of all[e.id] || []) {
         const r = get(g); r.rsvps++
         if (s !== 'Deposited') r.came++
       }

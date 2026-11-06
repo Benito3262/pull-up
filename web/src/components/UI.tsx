@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { EventView } from '../lib/near'
-import { countdown, fmtDate, fmtNear, phaseOf, timeAgo, useActivity, useNow } from '../lib/data'
+import { countdown, filterPublicEvents, fmtDate, fmtNear, phaseOf, timeAgo, useActivity, useEvents, useNow } from '../lib/data'
 import { shortAccount } from '../lib/config'
 import { Cover } from './Cover'
 
@@ -43,10 +43,14 @@ const KIND_ICON: Record<string, string> = { create: '✦', deposit: '◎', check
 
 /** Live ticker of on-chain activity; toasts when new activity appears. */
 export function Ticker() {
-  const { data } = useActivity(24)
+  const { data: raw } = useActivity(40)
+  const { data: events } = useEvents()
   const now = useNow(5000)
   const toast = useToast()
   const seen = useRef<string | null>(null)
+  const publicIds = new Set(filterPublicEvents(events).map((e) => e.id))
+  // Until events load, show nothing rather than test noise
+  const data = events ? (raw || []).filter((a) => publicIds.has(a.event_id)).slice(0, 24) : null
   useEffect(() => {
     if (!data?.length) return
     const top = `${data[0].ts_ms}-${data[0].account}-${data[0].kind}`
@@ -54,6 +58,7 @@ export function Ticker() {
     seen.current = top
   }, [data, toast])
   if (!data) return <div className="ticker"><div className="ticker-skel shimmer" /></div>
+  if (!data.length) return null
   const items = [...data, ...data]
   return (
     <div className="ticker" aria-label="Live on-chain activity">

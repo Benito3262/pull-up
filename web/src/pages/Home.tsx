@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Mascot } from '../components/Brand'
 import { CardSkeleton, EventCard, KIND_LABEL, Avatar } from '../components/UI'
-import { fmtNear, nearNum, phaseOf, timeAgo, useActivity, useEvents, useNow, useStats } from '../lib/data'
+import { filterPublicEvents, fmtNear, nearNum, phaseOf, timeAgo, useActivity, useEvents, useNow, useStats } from '../lib/data'
 import { useEffect, useState } from 'react'
 
 function Count({ value, dp = 0, suffix = '' }: { value: number; dp?: number; suffix?: string }) {
@@ -30,12 +30,15 @@ const STEPS = [
 export function Home() {
   const { data: events } = useEvents()
   const { data: stats } = useStats()
-  const { data: act } = useActivity(6)
+  const { data: act } = useActivity(24)
   const now = useNow(10000)
-  const live = (events || []).filter((e) => phaseOf(e) === 'live')
-  const upcoming = (events || []).filter((e) => phaseOf(e) === 'upcoming')
+  const pub = filterPublicEvents(events)
+  const publicIds = new Set(pub.map((e) => e.id))
+  const publicAct = (act || []).filter((a) => publicIds.has(a.event_id))
+  const live = pub.filter((e) => phaseOf(e) === 'live')
+  const upcoming = pub.filter((e) => phaseOf(e) === 'upcoming')
   const featured = [...live, ...upcoming].slice(0, 3)
-  const closed = (events || []).filter((e) => e.closed)
+  const closed = pub.filter((e) => e.closed)
   const g = closed.reduce((a, e) => a + e.guest_count, 0)
   const c = closed.reduce((a, e) => a + e.checked_in_count, 0)
   const rate = g ? (c / g) * 100 : 0
@@ -53,8 +56,8 @@ export function Home() {
             <Link to="/create" className="btn btn-lg btn-ghost">Host one in 60s →</Link>
           </div>
           <div className="hero-proof">
-            {(act || []).slice(0, 4).map((a, i) => <Avatar key={i} id={a.account} size={30} />)}
-            <span>{act?.[0] ? <><b>{act[0].account.split('.')[0]}</b> {KIND_LABEL[act[0].kind]} {timeAgo(act[0].ts_ms, now)}</> : 'Loading live activity…'}</span>
+            {publicAct.slice(0, 4).map((a, i) => <Avatar key={i} id={a.account} size={30} />)}
+            <span>{publicAct[0] ? <><b>{publicAct[0].account.split('.')[0]}</b> {KIND_LABEL[publicAct[0].kind]} {timeAgo(publicAct[0].ts_ms, now)}</> : 'Loading live activity…'}</span>
           </div>
         </div>
         <div className="hero-art reveal">

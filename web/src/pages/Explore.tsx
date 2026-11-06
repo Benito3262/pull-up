@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CardSkeleton, Empty, EventCard, PageHead } from '../components/UI'
-import { nearNum, phaseOf, useEvents } from '../lib/data'
+import { filterPublicEvents, nearNum, phaseOf, useEvents } from '../lib/data'
 import { Link } from 'react-router-dom'
 
 export function Explore() {
@@ -9,7 +9,7 @@ export function Explore() {
   const [cat, setCat] = useState('All')
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<'soon' | 'popular' | 'stake'>('soon')
-  const open = (data || []).filter((e) => ['live', 'upcoming'].includes(phaseOf(e)))
+  const open = filterPublicEvents(data).filter((e) => ['live', 'upcoming'].includes(phaseOf(e)))
   const cats = ['All', ...Array.from(new Set(open.map((e) => e.category).filter(Boolean)))]
   const list = useMemo(() => {
     let l = open.filter((e) => (when === 'all' || phaseOf(e) === when) && (cat === 'All' || e.category === cat))

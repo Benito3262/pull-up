@@ -106,7 +106,7 @@ export function EventPage() {
         <div className="ev-main">
           <h1 className="reveal">{ev.title}</h1>
           <div className="ev-facts reveal">
-            <div><span>When</span><b>{fmtDate(ev.starts_ms)}</b></div>
+            <div data-testid="event-when"><span>When</span><b>{fmtDate(ev.starts_ms)}</b></div>
             <div><span>Where</span><b>{ev.location || 'TBA'}</b></div>
             <div><span>Host</span><b><a href={`${ACCOUNT_EXPLORER}/${ev.host}`} target="_blank" rel="noreferrer">{shortAccount(ev.host)}</a></b></div>
             <div><span>Check-in closes</span><b>{fmtDate(ev.check_in_deadline_ms)}</b></div>

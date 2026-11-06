@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Cover } from '../components/Cover'
 import { Empty, PageHead, fmtDate } from '../components/UI'
-import { fmtNear, nearNum, phaseOf, useEvents } from '../lib/data'
+import { filterPublicEvents, fmtNear, nearNum, phaseOf, useEvents } from '../lib/data'
 import { ACCOUNT_EXPLORER, CONTRACT_ID } from '../lib/config'
 
 export function Past() {
   const { data } = useEvents()
-  const past = (data || []).filter((e) => phaseOf(e) === 'past' || phaseOf(e) === 'settling').sort((a, b) => b.id - a.id)
+  const past = filterPublicEvents(data).filter((e) => phaseOf(e) === 'past' || phaseOf(e) === 'settling').sort((a, b) => b.id - a.id)
   return (
     <div className="page">
       <PageHead eyebrow="Past events" title="Receipts, not promises" sub="Settled events with show-up rates and real payouts. Every number below is read live from the contract." />

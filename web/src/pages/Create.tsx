@@ -5,9 +5,14 @@ import { Cover, COVERS } from '../components/Cover'
 import { PageHead, useToast } from '../components/UI'
 import { useAccount, connect } from '../components/WalletButton'
 import { TEMPLATES } from './Ideas'
+import { formatLocalDateTime, parseLocalDateTime } from '../lib/data'
 
 const CATS = ['Meetup', 'Workshop', 'Watch party', 'Fitness', 'Study group', 'Co-working', 'Social', 'Other']
-const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+/** Round-trip a Date into a datetime-local string in the user's local zone. */
+const toLocalInput = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 export function Create() {
   const account = useAccount()
@@ -18,7 +23,7 @@ export function Create() {
   const [f, setF] = useState({
     title: tpl?.title || '', description: tpl?.description || '', category: tpl?.category || 'Meetup', location: '',
     cover: tpl?.cover || 'sunrise', deposit: tpl?.deposit || '0.1', capacity: '30',
-    starts: local(new Date(Date.now() + 86400000)), hours: '3',
+    starts: toLocalInput(new Date(Date.now() + 86400000)), hours: '3',
   })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -30,7 +35,8 @@ export function Create() {
     if (!account) return connect()
     setBusy(true); setErr(null)
     try {
-      const starts = new Date(f.starts).getTime()
+      const starts = parseLocalDateTime(f.starts)
+      if (!Number.isFinite(starts)) throw new Error('Pick a valid start date and time')
       const deadline = starts + Number(f.hours) * 3600000
       const next = await viewMethod<number>('get_next_event_id')
       const res = await callMethodFull('create_event', {
@@ -82,7 +88,7 @@ export function Create() {
             <div className="ecard-body">
               <div className="ecard-cat">{f.category} · {f.location || 'Location'}</div>
               <h3>{f.title || 'Your event name'}</h3>
-              <div className="ecard-meta">{new Date(f.starts).toLocaleString()}</div>
+              <div className="ecard-meta">{formatLocalDateTime(f.starts)}</div>
             </div>
           </div>
           <div className="card tip"><b>Tip:</b> 0.05–0.25 NEAR is the sweet spot: enough to make people commit, small enough that nobody hesitates.</div>

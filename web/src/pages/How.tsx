@@ -9,6 +9,7 @@ const FAQ: [string, string][] = [
   ['Can the host run off with the money?', 'No. Deposits sit in the contract. The host can only check guests in and close the event. The only thing a host ever receives is rounding dust of a few yoctoNEAR.'],
   ['How does check-in work?', 'When you RSVP, your device creates a secret ticket and the contract stores only its hash. At the door the host scans your QR, and the contract checks it against the hash before marking you as there.'],
   ['Who can close an event?', 'The host can close at any time. After the check-in deadline, anyone can close it, so funds never get stuck.'],
+  ['Can the host close early?', 'Yes. The host can close and settle any time — even before the check-in window ends. Guests who already checked in then claim their deposit plus a share of the no-shows. After the deadline, anyone can close, so funds never get stuck.'],
   ['Why not just use a bank or payment app?', 'A bank needs someone to hold the money and do the refunds by hand. Pull Up works across borders, settles in seconds for a fraction of a cent, and anyone can check the payouts on the explorer.'],
   ['Is this real money?', 'This build runs on NEAR testnet, so deposits are free test NEAR. You can get some from the testnet faucet.'],
 ]
